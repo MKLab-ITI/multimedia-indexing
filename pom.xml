@@ -25,6 +25,11 @@
             <artifactId>georegression</artifactId>
             <version>0.3</version>
         </dependency>
+          <dependency>
+    <groupId>com.sleepycat</groupId>
+    <artifactId>je</artifactId>
+    <version>5.0.58</version>
+  </dependency>
         <dependency>
             <groupId>
                 com.googlecode.efficient-java-matrix-library
@@ -52,16 +57,12 @@
    			<artifactId>jInstagram</artifactId>
    			<version>1.0.3</version>
 		</dependency>
-        <dependency>
-            <groupId>eu.socialsensor</groupId>
-            <artifactId>je</artifactId>
-            <version>5.0.58</version>
-        </dependency>
-        <dependency>
-            <groupId>eu.socialsensor</groupId>
-            <artifactId>lingpipe</artifactId>
-            <version>4.1.0</version>
-        </dependency>
+       
+<dependency>
+  <groupId>com.aliasi</groupId>
+  <artifactId>lingpipe</artifactId>
+  <version>4.0.1</version>
+</dependency>
     </dependencies>
   
     <build>
@@ -79,4 +80,19 @@
         </plugins>
     </build>
 
+    <repositories>
+  <repository>
+    <id>oracleReleases</id>
+    <name>Oracle Released Java Packages</name>
+    <url>http://download.oracle.com/maven</url>
+    <releases>
+      <enabled>true</enabled>
+    </releases>
+    <snapshots />
+  </repository>
+  <repository>
+  <id>clojars.org</id>
+  <url>http://clojars.org/repo</url>
+</repository>
+</repositories>
 </project>

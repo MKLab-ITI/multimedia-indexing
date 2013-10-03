@@ -1,21 +1,13 @@
 package gr.iti.mklab.visual.aggregation;
 
+import gr.iti.mklab.visual.utilities.Result;
+
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Serializable;
 import java.util.ArrayList;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-
-
 import com.aliasi.util.BoundedPriorityQueue;
-
-import gr.iti.mklab.visual.utilities.Result;
 
 /**
  * All methods which aggregate a set of local image descriptors should extend this abstract class.
@@ -23,7 +15,7 @@ import gr.iti.mklab.visual.utilities.Result;
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public abstract class DescriptorAggregator implements Serializable {
+public abstract class AbstractFeatureAggregator {
 
 	/**
 	 * The codebook (centroids) used to aggregate the vectors. Each centroid is stored in a different row.
@@ -120,7 +112,7 @@ public abstract class DescriptorAggregator implements Serializable {
 	 */
 	protected abstract double[] aggregateInternal(double[][] descriptors) throws Exception;
 
-	protected DescriptorAggregator() {
+	protected AbstractFeatureAggregator() {
 
 	}
 
@@ -129,7 +121,7 @@ public abstract class DescriptorAggregator implements Serializable {
 	 * 
 	 * @param codebook
 	 */
-	protected DescriptorAggregator(double[][] codebook) {
+	protected AbstractFeatureAggregator(double[][] codebook) {
 		this.codebook = codebook;
 		this.numCentroids = codebook.length;
 		this.descriptorLength = codebook[0].length;
@@ -222,7 +214,7 @@ public abstract class DescriptorAggregator implements Serializable {
 		}
 		int[] nn = new int[k];
 		for (int i = 0; i < k; i++) {
-			nn[i] = bpq.poll().getInternalId();
+			nn[i] = bpq.poll().getId();
 		}
 		return nn;
 	}
@@ -245,35 +237,6 @@ public abstract class DescriptorAggregator implements Serializable {
 			if (!line.contains(",")) { // not a csv data line
 				continue;
 			}
-			String[] centerStrings = line.split(",");
-			for (int i = 0; i < centerStrings.length; i++) {
-				codebook[counter][i] = Double.parseDouble(centerStrings[i]);
-			}
-			counter++;
-		}
-		in.close();
-		return codebook;
-	}
-
-	/**
-	 * Reads the codebook from the given file in hdfs and returns it as two-dimensional double array.
-	 * 
-	 * @param codebookFileName
-	 *            the name of the hdfs file containing the codebook
-	 * @throws IOException
-	 */
-	public static double[][] readCodebookFile(Configuration conf, Path codebookFileName, int numCentroids, int centroidLength) throws IOException {
-
-		double[][] codebook = new double[numCentroids][centroidLength];
-
-		// load the codebook from hdfs
-		FileSystem hdfs = FileSystem.get(conf);
-		DataInputStream d = new DataInputStream(hdfs.open(codebookFileName));
-		BufferedReader in = new BufferedReader(new InputStreamReader(d));
-
-		String line;
-		int counter = 0;
-		while ((line = in.readLine()) != null) {
 			String[] centerStrings = line.split(",");
 			for (int i = 0; i < centerStrings.length; i++) {
 				codebook[counter][i] = Double.parseDouble(centerStrings[i]);

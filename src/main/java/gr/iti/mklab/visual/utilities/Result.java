@@ -2,11 +2,10 @@ package gr.iti.mklab.visual.utilities;
 
 import java.util.Comparator;
 
-import com.javadocmd.simplelatlng.LatLng;
-
 /**
- * This is a helper class. Each Result has an id, a name and a distance (from a query) vector. Objects of this
- * class are passed into a BoundedPriorityQueue during k-nearest neighbor calculation.
+ * This class implements the Comparator interface and is used for feeding distance calculation results in a
+ * BoundedPriorityQueue during k-nearest neighbor search. Each Result has an internalId, an externalId and a
+ * distance.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
@@ -14,55 +13,25 @@ import com.javadocmd.simplelatlng.LatLng;
 public class Result implements Comparator<Result> {
 
 	/**
-	 * The internal id of the returned result.
+	 * The distance.
 	 */
-	private int internalId;
+	private double distance;
 
 	/**
 	 * The external id of the returned result.
 	 */
 	private String externalId;
 
-	public LatLng getGeolocation() {
-		return geolocation;
-	}
-
-	public void setGeolocation(LatLng geolocation) {
-		this.geolocation = geolocation;
-	}
-
-	private LatLng geolocation;
-
 	/**
-	 * The distance from the query.
+	 * The id of the returned result.
 	 */
-	private double distance;
-
-	public int getInternalId() {
-		return internalId;
-	}
-
-	public void setInternalId(int internalId) {
-		this.internalId = internalId;
-	}
-
-	public String getExternalId() {
-		return externalId;
-	}
-
-	public void setExternalId(String externalId) {
-		this.externalId = externalId;
-	}
-
-	public double getDistance() {
-		return distance;
-	}
+	private int id;
 
 	public Result() {
 	}
 
-	public Result(int internalId, double distance) {
-		this.internalId = internalId;
+	public Result(int id, double distance) {
+		this.id = id;
 		this.distance = distance;
 	}
 
@@ -75,8 +44,28 @@ public class Result implements Comparator<Result> {
 			return 0;
 	}
 
+	public double getDistance() {
+		return distance;
+	}
+
+	public String getExternalId() {
+		return externalId;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setExternalId(String externalId) {
+		this.externalId = externalId;
+	}
+
+	public void setId(int internalId) {
+		this.id = internalId;
+	}
+
 	public String toString() {
-		String output = "ID: " + externalId + " internalID: " + internalId + " distance: " + distance;
+		String output = "id: " + id + "  distance: " + distance;
 		return output;
 	}
 

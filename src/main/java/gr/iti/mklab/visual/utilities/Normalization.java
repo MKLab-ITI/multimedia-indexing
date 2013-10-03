@@ -3,7 +3,7 @@ package gr.iti.mklab.visual.utilities;
 import java.util.Arrays;
 
 /**
- * This class contains utility methods used for vector normalization.
+ * This class contains vector normalization methods.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
@@ -11,7 +11,8 @@ import java.util.Arrays;
 public class Normalization {
 
 	/**
-	 * This method applies L2 normalization on a given array of doubles.
+	 * This method applies L2 normalization on a given array of doubles. The passed vector is modified by the
+	 * method.
 	 * 
 	 * @param vector
 	 *            the original vector
@@ -36,7 +37,8 @@ public class Normalization {
 	}
 
 	/**
-	 * This method applies L1 normalization on a given array of doubles.
+	 * This method applies L1 normalization on a given array of doubles. The passed vector is modified by the
+	 * method.
 	 * 
 	 * @param vector
 	 *            the original vector
@@ -60,12 +62,13 @@ public class Normalization {
 	}
 
 	/**
-	 * This method applies power normalization on a given array of doubles.
+	 * This method applies power normalization on a given array of doubles. The passed vector is modified by
+	 * the method.
 	 * 
 	 * @param vector
 	 *            the original vector
 	 * @param aParameter
-	 *            the a parameter used (usually 0.5)
+	 *            the a parameter used
 	 * @return the power normalized vector
 	 */
 	public static double[] normalizePower(double[] vector, double aParameter) {
@@ -75,12 +78,17 @@ public class Normalization {
 		return vector;
 	}
 
-	public static void main(String args[]) {
-		double[] vector = new double[3];
-		Arrays.fill(vector, 2);
-		System.out.println(Arrays.toString(vector));
+	/**
+	 * This method applies Signed Square Root (SSR) normalization (component-wise square rooting followed be
+	 * L2 normalization) on a given array of doubles. The passed vector is modified by the method.
+	 * 
+	 * @param vector
+	 *            the original vector
+	 * @return the SSR normalized vector
+	 */
+	public static double[] normalizeSSR(double[] vector) {
 		normalizePower(vector, 0.5);
-		System.out.println(Arrays.toString(vector));
-
+		normalizeL2(vector);
+		return vector;
 	}
 }

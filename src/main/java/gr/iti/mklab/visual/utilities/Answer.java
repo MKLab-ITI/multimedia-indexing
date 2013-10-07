@@ -1,39 +1,48 @@
 package gr.iti.mklab.visual.utilities;
 
+/**
+ * Objects of this class represents the respone of an index to a query.
+ * 
+ * @author Eleftherios Spyromitros-Xioufis
+ */
 public class Answer {
 
-	public Result[] getResults() {
-		return results;
-	}
+	/**
+	 * Time taken to search the index (ms).
+	 */
+	private long indexSearchTime;
+	/**
+	 * Time taken for name look-up (ms).
+	 */
+	private long nameLookupTime;
+	/**
+	 * An array of Results.
+	 */
+	private Result[] results;
 
-	public void setResults(Result[] results) {
+	/**
+	 * Constructor.
+	 * 
+	 * @param results
+	 * @param nameLookupTime
+	 * @param indexSearchTime
+	 */
+	public Answer(Result[] results, long nameLookupTime, long indexSearchTime) {
 		this.results = results;
-	}
-
-	public long getNameLookupTime() {
-		return nameLookupTime;
-	}
-
-	public void setNameLookupTime(long nameLookupTime) {
 		this.nameLookupTime = nameLookupTime;
+		this.indexSearchTime = indexSearchTime;
 	}
 
 	public long getIndexSearchTime() {
 		return indexSearchTime;
 	}
 
-	public void setIndexSearchTime(long indexSearchTime) {
-		this.indexSearchTime = indexSearchTime;
+	public long getNameLookupTime() {
+		return nameLookupTime;
 	}
 
-	private Result[] results;
-	private long nameLookupTime;
-	private long indexSearchTime;
-
-	public Answer(Result[] results, long nameLookupTime, long indexSearchTime) {
-		this.results = results;
-		this.nameLookupTime = nameLookupTime;
-		this.indexSearchTime = indexSearchTime;
+	public Result[] getResults() {
+		return results;
 	}
 
 }

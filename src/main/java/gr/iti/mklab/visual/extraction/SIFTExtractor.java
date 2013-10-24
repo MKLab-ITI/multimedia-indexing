@@ -4,6 +4,7 @@ import gr.iti.mklab.visual.utilities.Normalization;
 
 import java.awt.image.BufferedImage;
 
+import boofcv.abst.feature.describe.ConfigSiftScaleSpace;
 import boofcv.abst.feature.detdesc.DetectDescribePoint;
 import boofcv.core.image.ConvertBufferedImage;
 import boofcv.factory.feature.detdesc.FactoryDetectDescribe;
@@ -29,18 +30,18 @@ public class SIFTExtractor extends FeatureExtractor {
 		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribeNormalization.sift(4, 1,
 		// doubleInputImaged, -1);
 		// == v0.12 version ==
-		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(4, 1, false, -1);
-		// == v0.14 version ==
-		// ConfigSiftScaleSpace conf = new ConfigSiftScaleSpace();
-		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null,
-		// null);
+		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(4, 1, false, -1);
+		// == v0.14++ version ==
+		ConfigSiftScaleSpace conf = new ConfigSiftScaleSpace();
+		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null,
+				null);
 
 		// specify the image to process
 		sift.detect(boofcvImage);
 		int numPoints = sift.getNumberOfFeatures();
 		double[][] descriptions = new double[numPoints][SIFTLength];
 		for (int i = 0; i < numPoints; i++) {
-			descriptions[i] = sift.getDescriptor(i).getValue();
+			descriptions[i] = sift.getDescription(i).getValue();
 			if (powerNormalization) {
 				descriptions[i] = Normalization.normalizePower(descriptions[i], 0.5);
 			}

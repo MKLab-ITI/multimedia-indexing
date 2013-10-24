@@ -5,6 +5,7 @@ import gr.iti.mklab.visual.utilities.Normalization;
 import java.awt.image.BufferedImage;
 
 import boofcv.abst.feature.detdesc.DetectDescribePoint;
+import boofcv.abst.feature.detect.interest.ConfigFastHessian;
 import boofcv.core.image.ConvertBufferedImage;
 import boofcv.factory.feature.detdesc.FactoryDetectDescribe;
 import boofcv.struct.feature.SurfFeature;
@@ -49,19 +50,20 @@ public class SURFExtractor extends FeatureExtractor {
 		// FactoryDetectDescribeNormalization.surf(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4, 4,
 		// modified, ImageFloat32.class);
 		// == v0.12 version ==
-		DetectDescribePoint<ImageFloat32, SurfFeature> surf = FactoryDetectDescribe.surf(minFeatureIntensity,
-				2, maxFeaturesPerScale, 2, 9, 4, 4, true, ImageFloat32.class);
-		// == v0.14 version ==
-		// ConfigFastHessian conf = new ConfigFastHessian(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9,
-		// 4, 4);
-		// DetectDescribePoint<ImageFloat32, SurfFeature> surf = FactoryDetectDescribe.surfStable(conf, null,
-		// null, ImageFloat32.class);
+		// DetectDescribePoint<ImageFloat32, SurfFeature> surf =
+		// FactoryDetectDescribe.surf(minFeatureIntensity,
+		// 2, maxFeaturesPerScale, 2, 9, 4, 4, true, ImageFloat32.class);
+		// == v0.14++ version ==
+		ConfigFastHessian conf = new ConfigFastHessian(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4,
+				4);
+		DetectDescribePoint<ImageFloat32, SurfFeature> surf = FactoryDetectDescribe.surfStable(conf, null,
+				null, ImageFloat32.class);
 		// // specify the image to process
 		surf.detect(boofcvImage);
 		int numPoints = surf.getNumberOfFeatures();
 		double[][] descriptions = new double[numPoints][SURFLength];
 		for (int i = 0; i < numPoints; i++) {
-			descriptions[i] = surf.getDescriptor(i).getValue();
+			descriptions[i] = surf.getDescription(i).getValue();
 			if (powerNormalization) {
 				descriptions[i] = Normalization.normalizePower(descriptions[i], 0.5);
 			}

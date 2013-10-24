@@ -1,5 +1,7 @@
 package gr.iti.mklab.visual.extraction;
 
+import gr.iti.mklab.visual.utilities.ImageIOGreyScale;
+
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Transparency;
@@ -9,9 +11,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-
-import gr.iti.mklab.visual.utilities.ImageIOGreyScale;
-
 
 /**
  * This class performs image scaling
@@ -41,9 +40,10 @@ public class ImageScaling {
 	private boolean higherQuality;
 
 	/**
-	 * One of the rendering hints that corresponds to {@code RenderingHints.KEY_INTERPOLATION} (e.g. {@code
-	 * RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR}, {@code
-	 * RenderingHints.VALUE_INTERPOLATION_BILINEAR}, {@code RenderingHints.VALUE_INTERPOLATION_BICUBIC})
+	 * One of the rendering hints that corresponds to {@code RenderingHints.KEY_INTERPOLATION} (e.g.
+	 * {@code RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR},
+	 * {@code RenderingHints.VALUE_INTERPOLATION_BILINEAR}, {@code RenderingHints.VALUE_INTERPOLATION_BICUBIC}
+	 * )
 	 */
 	private Object hint;
 
@@ -90,7 +90,8 @@ public class ImageScaling {
 	 *         applied
 	 */
 	public BufferedImage maxPixelsScaling(BufferedImage img) {
-		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB
+				: BufferedImage.TYPE_INT_ARGB;
 		// get dimensions of original image
 		int originalWidth = img.getWidth();
 		int originalHeight = img.getHeight();
@@ -160,7 +161,8 @@ public class ImageScaling {
 	 *         applied
 	 */
 	public BufferedImage squareScaling(BufferedImage img) {
-		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB
+				: BufferedImage.TYPE_INT_ARGB;
 		// get dimensions of original image
 		int originalWidth = img.getWidth();
 		int originalHeight = img.getHeight();
@@ -230,13 +232,14 @@ public class ImageScaling {
 		}
 
 		// now crop the image
-		ret = ret.getSubimage(0, 0, Math.min(targetSize, originalWidth), Math.min(targetSize, originalHeight));
+		ret = ret
+				.getSubimage(0, 0, Math.min(targetSize, originalWidth), Math.min(targetSize, originalHeight));
 		return ret;
 	}
 
 	/**
-	 * Same as {@link #squareScaling(BufferedImage)} but takes the imageFileName instead of a {@code
-	 * BufferedImage}.
+	 * Same as {@link #squareScaling(BufferedImage)} but takes the imageFileName instead of a
+	 * {@code BufferedImage}.
 	 * 
 	 * @param imageFilename
 	 * @return
@@ -265,7 +268,8 @@ public class ImageScaling {
 	 *         applied
 	 */
 	public BufferedImage rectScaling(BufferedImage img) {
-		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+		int type = (img.getTransparency() == Transparency.OPAQUE) ? BufferedImage.TYPE_INT_RGB
+				: BufferedImage.TYPE_INT_ARGB;
 		// get dimensions of original image
 		int originalWidth = img.getWidth();
 		int originalHeight = img.getHeight();
@@ -326,8 +330,8 @@ public class ImageScaling {
 	}
 
 	/**
-	 * Same as {@link #rectScaling(BufferedImage)} but takes the imageFileName instead of a {@code
-	 * BufferedImage}.
+	 * Same as {@link #rectScaling(BufferedImage)} but takes the imageFileName instead of a
+	 * {@code BufferedImage}.
 	 * 
 	 * @param imageFilename
 	 * @return

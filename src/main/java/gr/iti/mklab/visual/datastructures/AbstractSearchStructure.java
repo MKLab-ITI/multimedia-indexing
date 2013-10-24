@@ -39,7 +39,7 @@ import com.sleepycat.persist.StoreConfig;
 public abstract class AbstractSearchStructure {
 
 	/**
-	 * The total memory to be used by the BDB. Larger values will allow faster id lookup.
+	 * The total memory to be used by the BDB, 100Mb by default. Larger values will allow faster id lookup.
 	 */
 	protected final long cacheSize = 1024 * 1024 * 100;
 
@@ -158,7 +158,8 @@ public abstract class AbstractSearchStructure {
 	 * @param loadCounter
 	 *            The initial value of the load counter
 	 */
-	protected AbstractSearchStructure(int vectorLength, int maxNumVectors, boolean readOnly, boolean countSizeOnLoad, int loadCounter) {
+	protected AbstractSearchStructure(int vectorLength, int maxNumVectors, boolean readOnly,
+			boolean countSizeOnLoad, int loadCounter) {
 		this.vectorLength = vectorLength;
 		this.loadCounter = loadCounter;
 		this.maxNumVectors = maxNumVectors;
@@ -257,7 +258,8 @@ public abstract class AbstractSearchStructure {
 				geolocations[i] = getGeolocation(iid);
 			}
 			long geolocationLookupTime = System.nanoTime() - start;
-			return new AnswerWithGeolocation(nn, geolocations, nameLookupTime, indexSearchTime, geolocationLookupTime);
+			return new AnswerWithGeolocation(nn, geolocations, nameLookupTime, indexSearchTime,
+					geolocationLookupTime);
 		}
 	}
 
@@ -273,7 +275,8 @@ public abstract class AbstractSearchStructure {
 	 * @return A bounded priority queue of Result objects
 	 * @throws Exception
 	 */
-	protected abstract BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] queryVector) throws Exception;
+	protected abstract BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k,
+			double[] queryVector) throws Exception;
 
 	/**
 	 * This method returns an {@link Answer} object, which contains the k nearest neighbors along with their
@@ -315,7 +318,8 @@ public abstract class AbstractSearchStructure {
 				geolocations[i] = getGeolocation(iid);
 			}
 			long geolocationLookupTime = System.nanoTime() - start;
-			return new AnswerWithGeolocation(nn, geolocations, nameLookupTime, indexSearchTime, geolocationLookupTime);
+			return new AnswerWithGeolocation(nn, geolocations, nameLookupTime, indexSearchTime,
+					geolocationLookupTime);
 		}
 	}
 
@@ -331,7 +335,8 @@ public abstract class AbstractSearchStructure {
 	 * @return A bounded priority queue of Result objects
 	 * @throws Exception
 	 */
-	protected abstract BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, int iid) throws Exception;
+	protected abstract BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, int iid)
+			throws Exception;
 
 	/**
 	 * Returns the internal id assigned to the vector with the given id or -1 if the id is not found. Accesses
@@ -420,7 +425,8 @@ public abstract class AbstractSearchStructure {
 			System.out.println("Internal id " + iid + " is out of range!");
 			return null;
 		}
-		PrimaryIndex<Integer, MetaDataEntity> primaryIndex = iidToMetadataDB.getPrimaryIndex(Integer.class, MetaDataEntity.class);
+		PrimaryIndex<Integer, MetaDataEntity> primaryIndex = iidToMetadataDB.getPrimaryIndex(Integer.class,
+				MetaDataEntity.class);
 		return primaryIndex.get(null, iid, null);
 	}
 
@@ -471,7 +477,8 @@ public abstract class AbstractSearchStructure {
 			return false;
 		}
 		MetaDataEntity mde = new MetaDataEntity(iid, metaData);
-		PrimaryIndex<Integer, MetaDataEntity> primaryIndex = iidToMetadataDB.getPrimaryIndex(Integer.class, MetaDataEntity.class);
+		PrimaryIndex<Integer, MetaDataEntity> primaryIndex = iidToMetadataDB.getPrimaryIndex(Integer.class,
+				MetaDataEntity.class);
 
 		if (primaryIndex.contains(iid)) {
 			primaryIndex.put(null, mde);
@@ -627,7 +634,8 @@ public abstract class AbstractSearchStructure {
 	 * This method can be called to output indexing time measurements.
 	 */
 	public void outputIndexingTimes() {
-		System.out.println((double) totalInternalVectorIndexingTime / loadCounter + " ms => internal indexing time");
+		System.out.println((double) totalInternalVectorIndexingTime / loadCounter
+				+ " ms => internal indexing time");
 		System.out.println((double) totalIdMappingTime / loadCounter + " ms => id mapping time");
 		System.out.println((double) totalVectorIndexingTime / loadCounter + " ms => total indexing time");
 		outputIndexingTimesInternal();

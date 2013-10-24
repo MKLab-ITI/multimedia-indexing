@@ -17,27 +17,26 @@ import java.util.concurrent.Callable;
 import javax.imageio.ImageIO;
 
 /**
- * This class implements the Callable interface and can be used for
+ * This class represents an image download task. It implements the Callable interface and can be used for
  * multi-threaded image download.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public class ImageDownload implements Callable<ImageDownload> {
+public class ImageDownload implements Callable<ImageDownloadResult> {
 
 	/**
 	 * The URL where the image should be downloaded from.
 	 */
-	private String urlStr;
+	private String imageUrl;
 
 	/**
 	 * The image identifier.
 	 */
-	private String id;
+	private String imageId;
 
 	/**
-	 * The directory where the image will be downloaded (temporarily or
-	 * permanently).
+	 * The directory where the image will be downloaded (temporarily or permanently).
 	 */
 	private String downloadFolder;
 
@@ -52,15 +51,9 @@ public class ImageDownload implements Callable<ImageDownload> {
 	private boolean saveOriginal;
 
 	/**
-	 * Whether to follow redirects (note that when redirects are followed, a
-	 * wrong image may be downloaded).
+	 * Whether to follow redirects (note that when redirects are followed, a wrong image may be downloaded).
 	 */
 	private boolean followRedirects;
-
-	/**
-	 * The BufferedImage object.
-	 */
-	private BufferedImage image;
 
 	/**
 	 * The value to use in HttpURLConnection.setConnectTimeout()
@@ -102,8 +95,8 @@ public class ImageDownload implements Callable<ImageDownload> {
 	 *            The folder where the image is temporarily downloaded
 	 */
 	public ImageDownload(String urlStr, String id, String downloadFolder) {
-		this.urlStr = urlStr;
-		this.id = id;
+		this.imageUrl = urlStr;
+		this.imageId = id;
 		this.downloadFolder = downloadFolder;
 		this.saveThumb = false;
 		this.saveOriginal = false;
@@ -116,8 +109,7 @@ public class ImageDownload implements Callable<ImageDownload> {
 	 * @param urlStr
 	 *            The url where the image is downloaded from
 	 * @param id
-	 *            The image identifier (used to name the image file after
-	 *            download)
+	 *            The image identifier (used to name the image file after download)
 	 * @param downloadFolder
 	 *            The folder where the image is downloaded
 	 * @param saveThumb
@@ -127,10 +119,10 @@ public class ImageDownload implements Callable<ImageDownload> {
 	 * @param followRedirects
 	 *            Whether redirects should be followed
 	 */
-	public ImageDownload(String urlStr, String id, String downloadFolder,
-			boolean saveThumb, boolean saveOriginal, boolean followRedirects) {
-		this.urlStr = urlStr;
-		this.id = id;
+	public ImageDownload(String urlStr, String id, String downloadFolder, boolean saveThumb,
+			boolean saveOriginal, boolean followRedirects) {
+		this.imageUrl = urlStr;
+		this.imageId = id;
 		this.downloadFolder = downloadFolder;
 		this.saveThumb = saveThumb;
 		this.saveOriginal = saveOriginal;
@@ -139,45 +131,44 @@ public class ImageDownload implements Callable<ImageDownload> {
 
 	@Override
 	/**
-	 * Returns an ImageDownload object from where the BufferedImage object and the image identifier can be
+	 * Returns an ImageDownloadResult object from where the BufferedImage object and the image identifier can be
 	 * obtained.
 	 */
-	public ImageDownload call() throws Exception {
+	public ImageDownloadResult call() throws Exception {
 		if (debug)
-			System.out.println("Downloading image " + urlStr + " started.");
-		downloadImage();
+			System.out.println("Downloading image " + imageUrl + " started.");
+		BufferedImage image = downloadImage();
 		if (debug)
-			System.out.println("Downloading image " + urlStr + " completed.");
-		return this;
+			System.out.println("Downloading image " + imageUrl + " completed.");
+		return new ImageDownloadResult(imageId, imageUrl, image);
 	}
 
 	/**
 	 * Download of an image by URL.
 	 * 
+	 * @return The image as a BufferedImage object.
 	 * @throws Exception
 	 */
-	private void downloadImage() throws Exception {
-		// try to recognize the type of the image from the url so that the
-		// correct format and file extension
+	private BufferedImage downloadImage() throws Exception {
+		BufferedImage image = null;
+		// try to recognize the type of the image from the url so that the correct format and file extension
 		// are used when saving the thumbnail image or the original image.
-		// In case that the url does not contain a known image extension, the
-		// jpg extension is used.
-		String[] splitted = urlStr.split("\\.");
+		// In case that the url does not contain a known image extension, the jpg extension is used.
+		String[] splitted = imageUrl.split("\\.");
 		String fileExtension = (splitted[splitted.length - 1]).toLowerCase();
-		if (!fileExtension.equals("jpg") && !fileExtension.equals("jpeg")
-				&& !fileExtension.equals("png") && !fileExtension.equals("bmp")
-				&& !fileExtension.equals("gif")) {
+		if (!fileExtension.equals("jpg") && !fileExtension.equals("jpeg") && !fileExtension.equals("png")
+				&& !fileExtension.equals("bmp") && !fileExtension.equals("gif")) {
 			fileExtension = "jpg";
 		}
 		// this name filename will be used for the saved image file
-		String imageFilename = downloadFolder + id + "." + fileExtension;
+		String imageFilename = downloadFolder + imageId + "." + fileExtension;
 
 		// initialize the url, checking that it is valid
 		URL url = null;
 		try {
-			url = new URL(urlStr);
+			url = new URL(imageUrl);
 		} catch (MalformedURLException e) {
-			System.out.println("Malformed url exception. Url: " + urlStr);
+			System.out.println("Malformed url exception. Url: " + imageUrl);
 			throw e;
 		}
 
@@ -189,15 +180,12 @@ public class ImageDownload implements Callable<ImageDownload> {
 		try {
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setInstanceFollowRedirects(followRedirects);
-			conn.setConnectTimeout(connectionTimeout); // TO DO: add retries
-														// when connections
-														// times out
+			conn.setConnectTimeout(connectionTimeout); // TO DO: add retries when connections times out
 			conn.setReadTimeout(readTimeout);
 			conn.connect();
 			success = true;
 		} catch (Exception e) {
-			System.out
-					.println("Connection related exception at url: " + urlStr);
+			System.out.println("Connection related exception at url: " + imageUrl);
 			throw e;
 		} finally {
 			if (!success) {
@@ -210,9 +198,8 @@ public class ImageDownload implements Callable<ImageDownload> {
 			in = conn.getInputStream();
 			success = true;
 		} catch (Exception e) {
-			System.out
-					.println("Exception when getting the input stream from the connection at url: "
-							+ urlStr);
+			System.out.println("Exception when getting the input stream from the connection at url: "
+					+ imageUrl);
 			throw e;
 		} finally {
 			if (!success) {
@@ -222,8 +209,7 @@ public class ImageDownload implements Callable<ImageDownload> {
 
 		rbc = Channels.newChannel(in);
 
-		// if an Exception is thrown in the following code, the file that was
-		// created must be deleted
+		// if an Exception is thrown in the following code, the file that was created must be deleted
 		try {
 			// just copy the file
 			fos = new FileOutputStream(imageFilename);
@@ -235,36 +221,27 @@ public class ImageDownload implements Callable<ImageDownload> {
 			try { // first try reading with the default class
 				image = ImageIO.read(new File(imageFilename));
 			} catch (IllegalArgumentException e) {
-				// this exception is probably thrown because of a greyscale jpeg
-				// image
-				System.out.println("Exception: " + e.getMessage()
-						+ " | Image: " + imageFilename + " URL: " + urlStr);
-				image = ImageIOGreyScale.read(new File(imageFilename)); // retry
-																		// with
-																		// the
-																		// modified
-																		// class
+				// this exception is probably thrown because of a greyscale jpeg image
+				System.out.println("Exception: " + e.getMessage() + " | Image: " + imageFilename + " URL: "
+						+ imageUrl);
+				image = ImageIOGreyScale.read(new File(imageFilename)); // retry with the modified class
 			}
-		} catch (Exception e) { // in case of any other exception delete the
-								// image and re-throw the exception
-			System.out.println("Exception: " + e.toString() + " | Image: "
-					+ imageFilename + " URL: " + urlStr);
+		} catch (Exception e) { // in case of any other exception delete the image and re-throw the exception
+			System.out.println("Exception: " + e.toString() + " | Image: " + imageFilename + " URL: "
+					+ imageUrl);
 			throw (e);
 		} finally {
-			if (image == null) { // if the image could not be read into a
-									// BufferedImage object then delete it
+			if (image == null) { // if the image could not be read into a BufferedImage object then delete it
 				File imageFile = new File(imageFilename);
 				imageFile.delete();
-				System.out.println("Deleting image with id " + id + ", url: "
-						+ urlStr);
+				System.out.println("Deleting image with id " + imageId + ", url: " + imageUrl);
 				throw new Exception("Could not read into BufferedImage");
 			} else {
 				if (saveThumb) { // save a thumbnail of the original image
 					ImageScaling scale = new ImageScaling(thumbnailSizeInPixels);
 					BufferedImage scaledImage = scale.maxPixelsScaling(image);
-					FileOutputStream out = new FileOutputStream(new File(
-							imageFilename.replace("." + fileExtension,
-									"-thumb." + fileExtension)));
+					FileOutputStream out = new FileOutputStream(new File(imageFilename.replace("."
+							+ fileExtension, "-thumb." + fileExtension)));
 					ImageIO.write(scaledImage, fileExtension, out);
 					out.close();
 				}
@@ -279,18 +256,7 @@ public class ImageDownload implements Callable<ImageDownload> {
 			rbc.close();
 			conn.disconnect();
 		}
-	}
-
-	public String getUrlStr() {
-		return urlStr;
-	}
-
-	public BufferedImage getImage() {
 		return image;
-	}
-
-	public String getId() {
-		return id;
 	}
 
 	/**
@@ -299,28 +265,23 @@ public class ImageDownload implements Callable<ImageDownload> {
 	 * @param args
 	 * @throws Exception
 	 */
-	public static void main(String args[]) {
+	public static void main(String args[]) throws Exception {
 		String urlStr = "http://upload.wikimedia.org/wikipedia/commons/5/58/Sunset_2007-1.jpg";
 		String id = "Sunset_2007-1";
 		String downloadFolder = "images/";
 		boolean saveThumb = true;
 		boolean saveOriginal = true;
 		boolean followRedirects = false;
-		ImageDownload imdown = new ImageDownload(urlStr, id, downloadFolder,
-				saveThumb, saveOriginal, followRedirects);
+		ImageDownload imdown = new ImageDownload(urlStr, id, downloadFolder, saveThumb, saveOriginal,
+				followRedirects);
 		imdown.setDebug(true);
-		try {
-			imdown.call();
-			System.out
-					.println("Getting the BufferedImage object of the downloaded image.");
-			imdown.getImage();
-			System.out
-					.println("Reading the downloaded image thumbnail into a BufferedImage object.");
-			ImageIO.read(new File(downloadFolder + id + "-thumb.jpg"));
-			System.out.println("Success!");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+		ImageDownloadResult imdr = imdown.call();
+		System.out.println("Getting the BufferedImage object of the downloaded image.");
+		imdr.getImage();
+		System.out.println("Reading the downloaded image thumbnail into a BufferedImage object.");
+		ImageIO.read(new File(downloadFolder + id + "-thumb.jpg"));
+		System.out.println("Success!");
+
 	}
 }

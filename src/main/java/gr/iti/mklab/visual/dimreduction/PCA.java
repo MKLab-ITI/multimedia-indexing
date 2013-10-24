@@ -17,9 +17,9 @@ import org.ejml.ops.SingularOps;
 /**
  * <p>
  * The following class shows how to perform basic principle component analysis in EJML. This class is a
- * modification of the <a href=
- * "https://code.google.com/p/efficient-java-matrix-library/wiki/PrincipleComponentAnalysisExample" >class</a>
- * written by Peter Abeles.
+ * modification of the <a
+ * href="https://code.google.com/p/efficient-java-matrix-library/wiki/PrincipleComponentAnalysisExample"
+ * >class</a> written by Peter Abeles.
  * </p>
  * <p>
  * Principal Component Analysis (PCA) is typically used to develop a linear model for a set of data (e.g. face
@@ -62,9 +62,7 @@ public class PCA {
 	/** principle component subspace is stored in the rows **/
 	private DenseMatrix64F V_t;
 
-	/**
-	 * a diagonal matrix with the singular values, required if whitening is applied
-	 **/
+	/** a diagonal matrix with the singular values, required if whitening is applied **/
 	private DenseMatrix64F W;
 
 	/** whether to apply whitening */
@@ -143,7 +141,7 @@ public class PCA {
 		if (numComponents > numSamples)
 			throw new IllegalArgumentException("More data needed to compute the desired number of components");
 
-		means = new DenseMatrix64F(1, sampleSize);
+		means = new DenseMatrix64F(sampleSize, 1);
 		// compute the mean of all the samples
 		for (int i = 0; i < numSamples; i++) {
 			for (int j = 0; j < sampleSize; j++) {
@@ -172,15 +170,13 @@ public class PCA {
 		V_t = svd.getV(null, true);
 		W = svd.getW(null);
 
-		// singular values are in an arbitrary order initially and need to be
-		// sorted in descending order
+		// singular values are in an arbitrary order initially and need to be sorted in descending order
 		SingularOps.descendingOrder(null, false, W, V_t, true);
 
 		// strip off unneeded components and find the basis
 		V_t.reshape(numComponents, sampleSize, true);
 
-		// if whitening is true then whiten the PCA matrix V_t by multiplying it
-		// with W
+		// if whitening is true then whiten the PCA matrix V_t by multiplying it with W
 		if (doWhitening) {
 			DenseMatrix64F V_t_w = new DenseMatrix64F(numComponents, sampleSize);
 			CommonOps.mult(W, V_t, V_t_w);
@@ -207,8 +203,7 @@ public class PCA {
 		// projection
 		CommonOps.mult(V_t, sample, projectedSample);
 		// whitening
-		if (doWhitening) { // always perform this normalization step when
-							// whitening is used
+		if (doWhitening) { // always perform this normalization step when whitening is used
 			return Normalization.normalizeL2(projectedSample.data);
 		} else {
 			return projectedSample.data;
@@ -229,22 +224,19 @@ public class PCA {
 			throw new Exception("Cannot save to file, PCA matrix is null!");
 		}
 		BufferedWriter out = new BufferedWriter(new FileWriter(PCAFileName));
-		// the first line of the file contains the training sample means per
-		// component
+		// the first line of the file contains the training sample means per component
 		for (int i = 0; i < sampleSize; i++) {
 			out.write(means.get(i) + " ");
 		}
 		out.write("\n");
 
-		// the second line of the file contains the eigenvalues in descending
-		// order
+		// the second line of the file contains the eigenvalues in descending order
 		for (int i = 0; i < numComponents; i++) {
 			out.write(W.get(i, i) + " ");
 		}
 		out.write("\n");
 
-		// the next lines of the file contain the eigenvectors in descending
-		// eigenvalue order
+		// the next lines of the file contain the eigenvectors in descending eigenvalue order
 		for (int i = 0; i < numComponents; i++) {
 			for (int j = 0; j < sampleSize; j++) {
 				out.write(V_t.get(i, j) + " ");
@@ -263,8 +255,7 @@ public class PCA {
 	 * @throws Exception
 	 */
 	public void loadPCAFromFile(String PCAFileName) throws Exception {
-		// parse the PCA projection file and put the PCA components in a 2-d
-		// double array
+		// parse the PCA projection file and put the PCA components in a 2-d double array
 		BufferedReader in = new BufferedReader(new FileReader(PCAFileName));
 		String line = "";
 
@@ -274,16 +265,16 @@ public class PCA {
 		if (meanString.length != sampleSize) {
 			throw new Exception("Means line is wrong!");
 		}
+		means = new DenseMatrix64F(sampleSize, 1);
 		for (int j = 0; j < sampleSize; j++) {
 			means.set(j, Double.parseDouble(meanString[j]));
 		}
 
-		// parse the first line which contains the eigenvalues and initialize
-		// the diagonal eigenvalue matrix W
+		// parse the first line which contains the eigenvalues and initialize the diagonal eigenvalue matrix W
 		line = in.readLine();
 		if (doWhitening) {
 			String[] eigenvaluesString = line.split(" ");
-			if (eigenvaluesString.length != numComponents) {
+			if (eigenvaluesString.length < numComponents) {
 				throw new Exception("Eigenvalues line is wrong!");
 			}
 			W = new DenseMatrix64F(numComponents, numComponents);
@@ -310,8 +301,7 @@ public class PCA {
 			}
 		}
 
-		// if whitening is true then whiten the PCA matrix V_t by multiplying it
-		// with W
+		// if whitening is true then whiten the PCA matrix V_t by multiplying it with W
 		if (doWhitening) {
 			DenseMatrix64F V_t_w = new DenseMatrix64F(numComponents, sampleSize);
 			CommonOps.mult(W, V_t, V_t_w);

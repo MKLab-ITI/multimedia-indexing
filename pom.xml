@@ -47,11 +47,11 @@
             <artifactId>simplelatlng</artifactId>
             <version>1.0.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.boofcv</groupId>
-            <artifactId>boofcv</artifactId>
-            <version>0.12</version>
-        </dependency>
+		<dependency>
+		  <groupId>org.boofcv</groupId>
+		  <artifactId>boofcv</artifactId>
+		  <version>0.12</version>
+		</dependency>
 		<dependency>
    			<groupId>com.sachinhandiekar</groupId>
    			<artifactId>jInstagram</artifactId>

@@ -1,286 +1,198 @@
 package gr.iti.mklab.visual.vectorization;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.Iterator;
-
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.stream.ImageInputStream;
-import javax.swing.ImageIcon;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-
-import gr.iti.mklab.visual.aggregation.DescriptorAggregator;
-import gr.iti.mklab.visual.aggregation.VladAggregator;
-import gr.iti.mklab.visual.dimreduction.PrincipalComponentAnalysis;
-import gr.iti.mklab.visual.extraction.ImageScaling;
+import gr.iti.mklab.visual.aggregation.AbstractFeatureAggregator;
+import gr.iti.mklab.visual.aggregation.VladAggregatorMultipleVocabularies;
+import gr.iti.mklab.visual.dimreduction.PCA;
+import gr.iti.mklab.visual.extraction.FeatureExtractor;
+import gr.iti.mklab.visual.extraction.SIFTExtractor;
 import gr.iti.mklab.visual.extraction.SURFExtractor;
-import gr.iti.mklab.visual.utilities.Normalization;
+
+import java.awt.image.BufferedImage;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
- * This class is used to ...
+ * This class implements multi-threaded image vectorization.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public class ImageVectorizer implements Serializable {
+public class ImageVectorizer {
+
+	private ExecutorService vectorizationExecutor;
+
+	private CompletionService<ImageVectorizationResult> pool;
+
+	/** The current number of tasks whose termination is pending. **/
+	private int numPendingTasks;
+
+	/** The target length of the extracted vector. **/
+	private int vectorLength;
 
 	/**
-	 * 
+	 * The maximum allowable number of pending tasks, used to limit the memory usage.
 	 */
-	private static final long serialVersionUID = 1L;
-	private static final int SURFlength = 64;
-	private static final int numCentroids = 64;
-
-	private VladAggregator VLAD;
-	private PrincipalComponentAnalysis PCA;
+	private final int maxNumPendingTasks;
 
 	/**
-	 * Initializes an ImageToVectorSimple object which is able to transform an input image into a VLAD+SURF
-	 * vector
+	 * Constructor of the multi-threaded vectorization class.
 	 * 
-	 * @param codebookFileName
-	 *            the file containing the centroids
+	 * @param featureType
+	 *            the features to be extracted (surf or sift)
+	 * @param codebooksFiles
+	 *            a String array with full paths to the codebook files
+	 * @param numCentroids
+	 *            an int array with the number of centroids in each codebook
+	 * @param projectionLength
+	 *            the length at which the vectors are projected
 	 * @param PCAFileName
 	 *            the file containing the PCA projection matrix
-	 * @param expensive
-	 *            if true, the expensive (long) vector is extracted
+	 * @param numThreads
+	 *            the number of vectorization threads to use
 	 * @throws Exception
 	 */
-	public ImageVectorizer(String codebookFileName, String PCAFileName, boolean expensive) throws Exception {
-		int projectionLength;
-		if (expensive) {
-			projectionLength = 1024;
+	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids,
+			int projectionLength, String PCAFileName, int numThreads) throws Exception {
+		int featureLength;
+		if (featureType.equals("surf")) {
+			featureLength = FeatureExtractor.SURFLength;
+			SURFExtractor surf = new SURFExtractor();
+			ImageVectorization.setFeatureExtractor(surf);
+		} else if (featureType.equals("sift")) {
+			featureLength = FeatureExtractor.SIFTLength;
+			SIFTExtractor sift = new SIFTExtractor();
+			sift.setPowerNormalization(true); // power+L2 normalize the SIFT descriptors
+			sift.setL2Normalization(true);
+			ImageVectorization.setFeatureExtractor(sift);
 		} else {
-			projectionLength = 96;
+			throw new Exception("Wrong feature type;");
 		}
-		initiallizeCodebookAndPCA(codebookFileName, PCAFileName, projectionLength);
-	}
-
-	public ImageVectorizer(String codebookFileName, String PCAFileName, int projectionLength) throws Exception {
-		initiallizeCodebookAndPCA(codebookFileName, PCAFileName, projectionLength);
-	}
-
-	public ImageVectorizer(Path codebookFileName, Path PCAFileName, Configuration conf, boolean expensive) throws Exception {
-		int projectionLength;
-		if (expensive) {
-			projectionLength = 1024;
-		} else {
-			projectionLength = 96;
-		}
-		initiallizeCodebookAndPCA(codebookFileName, PCAFileName, conf, projectionLength);
-	}
-
-	private void initiallizeCodebookAndPCA(Path codebookFileName, Path PCAFileName, Configuration conf, int projectionLength) throws IOException {
+		int numCodebooks = codebookFiles.length;
 		// initialize the VLAD object
-		if (codebookFileName != null) {
-			double[][] codebook = DescriptorAggregator.readCodebookFile(conf, codebookFileName, numCentroids, SURFlength);
-			VLAD = new VladAggregator(codebook);
+		double[][][] codebooks = new double[numCodebooks][][];
+		int vectorLength = 0;
+		for (int i = 0; i < numCodebooks; i++) {
+			codebooks[i] = AbstractFeatureAggregator.readQuantizer(codebookFiles[i], numCentroids[i],
+					featureLength);
+			vectorLength += codebooks[i].length * featureLength;
 		}
+
+		VladAggregatorMultipleVocabularies vladmvoc = new VladAggregatorMultipleVocabularies(codebooks);
+		ImageVectorization.setVladAggregator(vladmvoc);
+
 		// initialize the PCA object
-		if (PCAFileName != null && projectionLength < SURFlength * numCentroids) {
-			PCA = new PrincipalComponentAnalysis(projectionLength, 1, SURFlength * numCentroids);
-			PCA.setPCAFromFile(conf, PCAFileName);
+		PCA PCA = null;
+		if (PCAFileName != null && projectionLength < vectorLength) {
+			// initialize the PCA object
+			PCA = new PCA(projectionLength, 1, vectorLength, true);
+			PCA.loadPCAFromFile(PCAFileName);
 		}
-	}
+		ImageVectorization.setPcaProjector(PCA);
 
-	private void initiallizeCodebookAndPCA(String codebookFileName, String PCAFileName, int projectionLength) throws Exception {
-		// initialize the VLAD object
-		if (codebookFileName != null) {
-			double[][] codebook = DescriptorAggregator.readCodebookFile(codebookFileName, numCentroids, SURFlength);
-			VLAD = new VladAggregator(codebook);
-		}
-		// initialize the PCA object
-		if (PCAFileName != null && projectionLength < SURFlength * numCentroids) {
-			PCA = new PrincipalComponentAnalysis(projectionLength, 1, SURFlength * numCentroids);
-			PCA.setPCAFromFile(PCAFileName);
-		}
+		vectorizationExecutor = Executors.newFixedThreadPool(numThreads);
+		pool = new ExecutorCompletionService<ImageVectorizationResult>(vectorizationExecutor);
+		numPendingTasks = 0;
+		maxNumPendingTasks = numThreads * 10;
 	}
 
 	/**
-	 * Transforms an image file into a vector
+	 * Submits a new image vectorization task for an image that is stored in the disk and has not yet been
+	 * read into a BufferedImage object.
+	 * 
+	 * @param imageFolder
+	 *            The folder where the image resides.
+	 * @param imageName
+	 *            The name of the image.
 	 */
-	public double[] transformToVector(String imageFilename) throws Exception {
-		// read the image
-		BufferedImage image;
-		try { // first try reading with the default class
-			image = ImageIO.read(new File(imageFilename));
-		} catch (Exception e) { // if it fails retry with the corrected class
-			// This exception is probably because of a grayscale jpeg image.
-			System.out.println("Exception: " + e.getMessage() + " | Image: " + imageFilename);
-			try{
-			image = readImage(imageFilename);
-			}
-			catch(Exception ex) {
-				System.out.println("Exception: " + ex.getMessage() + " | Image: " + imageFilename);
-				image = ImageIOCorrected.read(new File(imageFilename));
-			}
-		}
-		// next the image is down-scaled
-		ImageScaling scale = new ImageScaling();
-		image = scale.maxPixelsScaling(image);
-
-		// next the descriptors are extracted
-		SURFExtractor surf = new SURFExtractor();
-		double[][] descriptors = surf.extractDescriptors(image);
-
-		// next the descriptors are aggregated
-		double[] vladVector = VLAD.aggregate(descriptors);
-		double power = 0.5;
-		vladVector = Normalization.normalizePower(vladVector, power);
-		vladVector = Normalization.normalizeL2(vladVector);
-
-		// print the VLAD vector
-		// System.out.println("VLAD vector:\n" + Arrays.toString(vladVector));
-
-		// next the vector is pca-reduced
-		double[] pcaReducedVector = PCA.sampleToEigenSpace(vladVector);
-		pcaReducedVector = Normalization.normalizeL2(pcaReducedVector);
-		// print the PCA transformed VLAD vector
-		// System.out.println("PCA transformed VLAD vector:\n" + Arrays.toString(transformed));
-		return pcaReducedVector;
+	public void submitImageVectorizationTask(String imageFolder, String imageName) {
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName, vectorLength);
+		pool.submit(call);
+		numPendingTasks++;
 	}
 
-	private BufferedImage readImage(String filename) throws IOException {
-		InputStream picture = new FileInputStream(filename);
-		ByteArrayOutputStream buf = new ByteArrayOutputStream();
-        byte[] b = new byte[10240];
-        int l = 0;
-        while ((l = picture.read(b)) >= 0) {
-            buf.write(b, 0, l);
-        }
-        buf.close();
-        byte[] picturedata = buf.toByteArray();
-        
-		ImageInputStream input = ImageIO
-                .createImageInputStream(new ByteArrayInputStream(
-                        picturedata));
-        Iterator<ImageReader> readers = ImageIO.getImageReaders(input);
-        ImageReader reader = null;
-        while (readers.hasNext()) {
-            reader = (ImageReader) readers.next();
-            if (reader.canReadRaster())
-                break;
-        }
-
-        if (reader == null) {
-        	picture.close();
-            throw new IOException("no reader found");
-        }
-        // Set the input.
-        reader.setInput(input);
-        int w = reader.getWidth(0);
-        int h = reader.getHeight(0);
-        BufferedImage image;
-        image = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
-        Image intImage = Toolkit.getDefaultToolkit().createImage(
-                picturedata);
-        new ImageIcon(intImage);
-        Graphics2D g = image.createGraphics();
-        g.drawImage(intImage, 0, 0, null);
-        g.dispose();
-        picture.close();
-        return image;
-	}
 	/**
-	 * Transforms a BufferedImage into a vector
+	 * This methods submits an image vectorization task for an image that has already been read into a
+	 * BufferedImage object.
+	 * 
+	 * @param imageName
+	 *            The name of the image.
+	 * @param im
+	 *            The BufferedImage object of the image.
 	 */
-	public double[] transformToVector(BufferedImage image) throws Exception {
-		// the image is down-scaled
-		ImageScaling scale = new ImageScaling();
-		image = scale.maxPixelsScaling(image);
-
-		// next the descriptors are extracted
-		SURFExtractor surf = new SURFExtractor();
-		double[][] descriptors = surf.extractDescriptors(image);
-
-		// next the descriptors are aggregated
-		double[] vladVector = VLAD.aggregate(descriptors);
-		double power = 0.5;
-		vladVector = Normalization.normalizePower(vladVector, power);
-		vladVector = Normalization.normalizeL2(vladVector);
-
-		// next the vector is pca-reduced
-		double[] pcaReducedVector = PCA.sampleToEigenSpace(vladVector);
-		pcaReducedVector = Normalization.normalizeL2(pcaReducedVector);
-		// print the PCA transformed VLAD vector
-		return pcaReducedVector;
+	public void submitImageVectorizationTask(String imageName, BufferedImage im) {
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, vectorLength);
+		pool.submit(call);
+		numPendingTasks++;
 	}
 
 	/**
-	 * Transforms a set of descriptors into a vector
-	 */
-	public double[] transformToVector(double[][] descriptors) throws Exception {
-		// next the descriptors are aggregated
-		double[] vladVector = VLAD.aggregate(descriptors);
-		double power = 0.5;
-		vladVector = Normalization.normalizeL2(vladVector);
-		vladVector = Normalization.normalizePower(vladVector, power);
-
-		// next the vector is pca-reduced
-		double[] pcaReducedVector = PCA.sampleToEigenSpace(vladVector);
-		pcaReducedVector = Normalization.normalizeL2(pcaReducedVector);
-		// print the PCA transformed VLAD vector
-		return pcaReducedVector;
-	}
-
-	/**
-	 * @param args
+	 * Takes and returns a vectorization result from the pool.
+	 * 
+	 * @return the vectorization result, or null in no results are ready
 	 * @throws Exception
+	 *             for a failed vectorization task
 	 */
-	public static void main(String[] args) throws Exception {
-
-		// String codebookFileName = "C:/Users/lef/Desktop/SocialSensorService/learning_files/codebook.txt";
-		// String PCAFileName = "C:/Users/lef/Desktop/SocialSensorService/learning_files/pca.txt";
-		// int vectorLength = 3;
-		// ImageVectorizerSimple vectorizer = new ImageVectorizerSimple(codebookFileName, PCAFileName,
-		// vectorLength);
-
-		Path codebookFileName = new Path("/image-indexer/codebook.txt");
-		Path PCAFileName = new Path("/image-indexer/pca.txt");
-		Configuration conf = new Configuration();
-		conf.addResource(new Path("C:/Users/lef/Desktop/hadoop.conf.xml"));
-		ImageVectorizer vectorizer = new ImageVectorizer(codebookFileName, PCAFileName, conf, false);
-
-		String imagesFolder = "C:/Users/lef/Desktop/ITI/data/Holidays/images/";// "images/ec1m_00010001.jpg";
-		File dir = new File(imagesFolder);
-		FilenameFilter filter = new FilenameFilter() {
-			public boolean accept(File dir, String name) {
-				if (name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png"))
-					return true;
-				else
-					return false;
+	public ImageVectorizationResult getImageVectorizationResult() throws Exception {
+		Future<ImageVectorizationResult> future = pool.poll();
+		if (future == null) {
+			return null;
+		} else {
+			try {
+				ImageVectorizationResult imvr = future.get();
+				return imvr;
+			} catch (Exception e) {
+				throw e;
+			} finally {
+				// in any case (Exception or not) the numPendingTask should be reduced
+				numPendingTasks--;
 			}
-		};
-		String[] files = dir.list(filter);
-
-		BufferedWriter out = new BufferedWriter(new FileWriter(new File(imagesFolder + "surf.txt")));
-		for (int i = 0; i < files.length; i++) {
-			long start = System.currentTimeMillis();
-			double[] vector = vectorizer.transformToVector(imagesFolder + files[i]);
-			out.write(files[i] + " ");
-			for (int j = 0; j < vector.length; j++) {
-				out.write(vector[j] + " ");
-			}
-			out.write("\n");
-			out.flush();
-			System.out.println("Vectorization for image " + files[i] + " completed in " + (System.currentTimeMillis() - start) + " ms.");
 		}
-		out.close();
+	}
 
+	/**
+	 * Gets an image vectorization result from the pool, waiting if necessary.
+	 * 
+	 * @return the vectorization result
+	 * @throws Exception
+	 *             for a failed vectorization task
+	 */
+	public ImageVectorizationResult getImageVectorizationResultWait() throws Exception {
+		try {
+			ImageVectorizationResult imvr = pool.take().get();
+			return imvr;
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			// in any case (Exception or not) the numPendingTask should be reduced
+			numPendingTasks--;
+		}
+	}
+
+	/**
+	 * Returns true if the number of pending tasks is smaller than the maximum allowable number.
+	 * 
+	 * @return
+	 */
+	public boolean canAcceptMoreTasks() {
+		if (numPendingTasks < maxNumPendingTasks) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/**
+	 * Shut the vectorization executor down, waiting for up to 10 seconds for the remaining tasks to complete.
+	 * 
+	 * @throws InterruptedException
+	 */
+	public void shutDown() throws InterruptedException {
+		vectorizationExecutor.shutdown();
+		vectorizationExecutor.awaitTermination(10, TimeUnit.SECONDS);
 	}
 }

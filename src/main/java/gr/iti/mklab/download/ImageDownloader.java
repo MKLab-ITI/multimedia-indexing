@@ -21,34 +21,70 @@ public class ImageDownloader {
 
 	private ExecutorService downloadExecutor;
 
-	private CompletionService<ImageDownload> pool;
+	private CompletionService<ImageDownloadResult> pool;
 
+	/** The current number of tasks whose termination is pending. **/
 	private int numPendingTasks;
 
 	/**
-	 * Used to limit the memory usage.
+	 * The maximum allowable number of pending tasks, used to limit the memory usage.
 	 */
-	private int maxNumPendingTasks;
+	private final int maxNumPendingTasks;
 
+	/**
+	 * The folder where the original image and/or its thumbnail should be saved.
+	 **/
+	private String downloadFolder;
+
+	/**
+	 * Whether the original image should be saved.
+	 */
 	private boolean saveOriginal;
 
+	/**
+	 * Whether a thumb of the original image should be saved.
+	 */
 	private boolean saveThumb;
 
+	/**
+	 * Whether redirects should be followed.
+	 */
 	private boolean followRedirects;
 
-	public ImageDownloader(int numThreads) {
-		downloadExecutor = Executors.newFixedThreadPool(numThreads);
-		pool = new ExecutorCompletionService<ImageDownload>(downloadExecutor);
-		numPendingTasks = 0;
-		maxNumPendingTasks = 20;
+	/**
+	 * Constructor of the multi-threaded download class.
+	 * 
+	 * @param numThreads
+	 *            the number of download threads to use
+	 * @param downloadFolder
+	 *            the download folder
+	 */
+	public ImageDownloader(String downloadFolder, int numThreads) {
+		this.downloadFolder = downloadFolder;
 		saveOriginal = false;
 		saveThumb = true;
 		followRedirects = false;
+
+		downloadExecutor = Executors.newFixedThreadPool(numThreads);
+		pool = new ExecutorCompletionService<ImageDownloadResult>(downloadExecutor);
+		numPendingTasks = 0;
+		maxNumPendingTasks = numThreads * 10;
+
 	}
 
-	public ImageDownloader(int numThreads, int maxNumPendingTasks) {
-		this(numThreads);
-		this.maxNumPendingTasks = maxNumPendingTasks;
+	/**
+	 * Submits a new image download task.
+	 * 
+	 * @param URL
+	 *            The url of the image
+	 * @param id
+	 *            The id of the image (used to name the image file after download)
+	 */
+	public void submitImageDownloadTask(String URL, String id) {
+		Callable<ImageDownloadResult> call = new ImageDownload(URL, id, downloadFolder, saveThumb,
+				saveOriginal, followRedirects);
+		pool.submit(call);
+		numPendingTasks++;
 	}
 
 	/**
@@ -58,56 +94,44 @@ public class ImageDownloader {
 	 * @throws Exception
 	 *             for a failed download task
 	 */
-	public ImageDownload getImageDownloadResult() throws Exception {
-		Future<ImageDownload> future = pool.poll();
+	public ImageDownloadResult getImageDownloadResult() throws Exception {
+		Future<ImageDownloadResult> future = pool.poll();
 		if (future == null) { // no completed tasks in the pool
 			return null;
 		} else {
 			try {
-				ImageDownload imd = future.get();
-				return imd;
+				ImageDownloadResult imdr = future.get();
+				return imdr;
 			} catch (Exception e) {
 				throw e;
 			} finally {
-				// in any case (Exception or not) the numPendingTask should be
-				// reduced
+				// in any case (Exception or not) the numPendingTask should be reduced
 				numPendingTasks--;
 			}
 		}
 	}
 
 	/**
-	 * Gets an image download results from the pool, waiting if necessary.
+	 * Gets an image download result from the pool, waiting if necessary.
 	 * 
 	 * @return the download result
 	 * @throws Exception
 	 *             for a failed download task
 	 */
-	public ImageDownload getImageDownloadResultWait() throws Exception {
+	public ImageDownloadResult getImageDownloadResultWait() throws Exception {
 		try {
-			ImageDownload imd = pool.take().get();
-			return imd;
+			ImageDownloadResult imdr = pool.take().get();
+			return imdr;
 		} catch (Exception e) {
 			throw e;
 		} finally {
-			// in any case (Exception or not) the numPendingTask should be
-			// reduced
+			// in any case (Exception or not) the numPendingTask should be reduced
 			numPendingTasks--;
 		}
 	}
 
 	/**
-	 * Returns the number of tasks which have not been consumed.
-	 * 
-	 * @return
-	 */
-	public int getNumPendingTasks() {
-		return numPendingTasks;
-	}
-
-	/**
-	 * Returns true if the number of pending tasks is smaller than the maximum
-	 * allowable number.
+	 * Returns true if the number of pending tasks is smaller than the maximum allowable number.
 	 * 
 	 * @return
 	 */
@@ -132,8 +156,7 @@ public class ImageDownloader {
 	}
 
 	/**
-	 * Shut the download executor down, waiting for up to 10 seconds for the
-	 * remaining tasks to complete.
+	 * Shut the download executor down, waiting for up to 10 seconds for the remaining tasks to complete.
 	 * 
 	 * @throws InterruptedException
 	 */
@@ -143,51 +166,28 @@ public class ImageDownloader {
 	}
 
 	/**
-	 * Submits a new image download task.
-	 * 
-	 * @param URL
-	 *            The url of the image
-	 * @param id
-	 *            The id of the image (used to name the image file after
-	 *            download)
-	 * @param downloadFolder
-	 *            The folder where the image file is downloaded
-	 */
-	public void submitImageDownloadTask(String URL, String id,
-			String downloadFolder) {
-		Callable<ImageDownload> call = new ImageDownload(URL, id,
-				downloadFolder, saveThumb, saveOriginal, followRedirects);
-		pool.submit(call);
-		numPendingTasks++;
-	}
-
-	/**
-	 * This method exemplifies multi-threaded image download from a list of
-	 * urls. It uses 5 download threads.
+	 * This method exemplifies multi-threaded image download from a list of urls. It uses 5 download threads.
 	 * 
 	 * @param dowloadFolder
 	 *            Full path to the folder where the images are downloaded
 	 * @param urlsFile
-	 *            Full path to the file that contains the ids and urls (space
-	 *            separated) of the images (one per line)
+	 *            Full path to the file that contains the ids and urls (space separated) of the images (one
+	 *            per line)
 	 * @param numUrls
 	 *            The total number of urls to consider
 	 * @param urlsToSkip
 	 *            How many urls (from the top of the file to be skipped)
 	 * @throws Exception
 	 */
-	public static void downloadFromUrlsFile(String dowloadFolder,
-			String urlsFile, int numUrls, int urlsToSkip) throws Exception {
+	public static void downloadFromUrlsFile(String dowloadFolder, String urlsFile, int numUrls, int urlsToSkip)
+			throws Exception {
 		long start = System.currentTimeMillis();
-		int numThreads = 20;
-		int maxNumPendingTasks = numThreads * 10;
-		BufferedReader in = new BufferedReader(new FileReader(
-				new File(urlsFile)));
+		int numThreads = 10;
+		BufferedReader in = new BufferedReader(new FileReader(new File(urlsFile)));
 		for (int i = 0; i < urlsToSkip; i++) {
 			in.readLine();
 		}
-		ImageDownloader downloader = new ImageDownloader(numThreads,
-				maxNumPendingTasks);
+		ImageDownloader downloader = new ImageDownloader(dowloadFolder, numThreads);
 		int submittedCounter = 0;
 		int completedCounter = 0;
 		int failedCounter = 0;
@@ -195,14 +195,12 @@ public class ImageDownloader {
 		while (true) {
 			String url;
 			String id = "";
-			// if there are more task to submit and the downloader can accept
-			// more tasks then submit
-			while (submittedCounter < numUrls
-					&& downloader.canAcceptMoreTasks()) {
+			// if there are more task to submit and the downloader can accept more tasks then submit
+			while (submittedCounter < numUrls && downloader.canAcceptMoreTasks()) {
 				line = in.readLine();
 				url = line.split("\\s+")[1];
 				id = line.split("\\s+")[0];
-				downloader.submitImageDownloadTask(url, id, dowloadFolder);
+				downloader.submitImageDownloadTask(url, id);
 				submittedCounter++;
 			}
 			// if are submitted taks that are pending completion ,try to consume
@@ -210,8 +208,7 @@ public class ImageDownloader {
 				try {
 					downloader.getImageDownloadResultWait();
 					completedCounter++;
-					System.out.println(completedCounter
-							+ " downloads completed!");
+					System.out.println(completedCounter + " downloads completed!");
 				} catch (Exception e) {
 					failedCounter++;
 					System.out.println(failedCounter + " downloads failed!");

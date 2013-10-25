@@ -54,10 +54,9 @@ public class SURFExtractor extends FeatureExtractor {
 		// FactoryDetectDescribe.surf(minFeatureIntensity,
 		// 2, maxFeaturesPerScale, 2, 9, 4, 4, true, ImageFloat32.class);
 		// == v0.14++ version ==
-		ConfigFastHessian conf = new ConfigFastHessian(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4,
-				4);
-		DetectDescribePoint<ImageFloat32, SurfFeature> surf = FactoryDetectDescribe.surfStable(conf, null,
-				null, ImageFloat32.class);
+		ConfigFastHessian conf = new ConfigFastHessian(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4, 4);
+		DetectDescribePoint<ImageFloat32, SurfFeature> surf = FactoryDetectDescribe.surfStable(conf, null, null,
+				ImageFloat32.class);
 		// // specify the image to process
 		surf.detect(boofcvImage);
 		int numPoints = surf.getNumberOfFeatures();

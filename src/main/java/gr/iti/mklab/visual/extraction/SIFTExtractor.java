@@ -33,8 +33,7 @@ public class SIFTExtractor extends FeatureExtractor {
 		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(4, 1, false, -1);
 		// == v0.14++ version ==
 		ConfigSiftScaleSpace conf = new ConfigSiftScaleSpace();
-		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null,
-				null);
+		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null, null);
 
 		// specify the image to process
 		sift.detect(boofcvImage);

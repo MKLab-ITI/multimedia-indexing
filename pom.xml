@@ -1,98 +1,98 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-  
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>gr.iti.mklab</groupId>
-    <artifactId>multimedia-indexing</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
-    <name>multimedia-indexing</name>
-    <url>http://maven.apache.org</url>
-  
-    <dependencies>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>1.0.3</version>
-        </dependency>
-        <dependency>
-            <groupId>net.sf.trove4j</groupId>
-            <artifactId>trove4j</artifactId>
-            <version>3.0.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.georegression</groupId>
-            <artifactId>georegression</artifactId>
-            <version>0.3</version>
-        </dependency>
-          <dependency>
-    <groupId>com.sleepycat</groupId>
-    <artifactId>je</artifactId>
-    <version>5.0.58</version>
-  </dependency>
-        <dependency>
-            <groupId>
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>gr.iti.mklab</groupId>
+	<artifactId>multimedia-indexing</artifactId>
+	<version>1.0-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>multimedia-indexing</name>
+	<url>http://maven.apache.org</url>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-core</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sf.trove4j</groupId>
+			<artifactId>trove4j</artifactId>
+			<version>3.0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.georegression</groupId>
+			<artifactId>georegression</artifactId>
+			<version>0.3</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sleepycat</groupId>
+			<artifactId>je</artifactId>
+			<version>5.0.58</version>
+		</dependency>
+		<dependency>
+			<groupId>
                 com.googlecode.efficient-java-matrix-library
             </groupId>
-            <artifactId>ejml</artifactId>
-            <version>0.21</version>
-        </dependency>
-        <dependency>
-            <groupId>org.ddogleg</groupId>
-            <artifactId>ddogleg</artifactId>
-            <version>0.3</version>
-        </dependency>
-        <dependency>
-            <groupId>com.javadocmd</groupId>
-            <artifactId>simplelatlng</artifactId>
-            <version>1.0.1</version>
-        </dependency>
-		<dependency>
-		  <groupId>org.boofcv</groupId>
-		  <artifactId>boofcv</artifactId>
-		  <version>0.15</version>
+			<artifactId>ejml</artifactId>
+			<version>0.21</version>
 		</dependency>
 		<dependency>
-   			<groupId>com.sachinhandiekar</groupId>
-   			<artifactId>jInstagram</artifactId>
-   			<version>1.0.3</version>
+			<groupId>org.ddogleg</groupId>
+			<artifactId>ddogleg</artifactId>
+			<version>0.3</version>
 		</dependency>
-       
-<dependency>
-  <groupId>com.aliasi</groupId>
-  <artifactId>lingpipe</artifactId>
-  <version>4.0.1</version>
-</dependency>
-    </dependencies>
-  
-    <build>
-        <plugins>          
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                </configuration>
-         
-            </plugin>
-        </plugins>
-    </build>
+		<dependency>
+			<groupId>com.javadocmd</groupId>
+			<artifactId>simplelatlng</artifactId>
+			<version>1.0.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.boofcv</groupId>
+			<artifactId>boofcv</artifactId>
+			<version>0.15</version>
+		</dependency>
+		<dependency>
+			<groupId>nz.ac.waikato.cms.weka</groupId>
+			<artifactId>weka-dev</artifactId>
+			<version>3.7.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.aliasi</groupId>
+			<artifactId>lingpipe</artifactId>
+			<version>4.0.1</version>
+		</dependency>
+	</dependencies>
 
-    <repositories>
-  <repository>
-    <id>oracleReleases</id>
-    <name>Oracle Released Java Packages</name>
-    <url>http://download.oracle.com/maven</url>
-    <releases>
-      <enabled>true</enabled>
-    </releases>
-    <snapshots />
-  </repository>
-  <repository>
-  <id>clojars.org</id>
-  <url>http://clojars.org/repo</url>
-</repository>
-</repositories>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.5.1</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+
+			</plugin>
+		</plugins>
+	</build>
+
+	<repositories>
+		<repository>
+			<id>oracleReleases</id>
+			<name>Oracle Released Java Packages</name>
+			<url>http://download.oracle.com/maven</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots />
+		</repository>
+		<repository>
+			<id>clojars.org</id>
+			<url>http://clojars.org/repo</url>
+		</repository>
+	</repositories>
 </project>

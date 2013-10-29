@@ -1,4 +1,4 @@
-package gr.iti.mklab.visual.learning.codebook;
+package gr.iti.mklab.visual.quantization;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

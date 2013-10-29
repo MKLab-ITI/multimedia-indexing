@@ -32,7 +32,7 @@ public class ImageVectorizer {
 	private int numPendingTasks;
 
 	/** The target length of the extracted vector. **/
-	private int vectorLength;
+	private int targetVectorLength;
 
 	/**
 	 * The maximum allowable number of pending tasks, used to limit the memory usage.
@@ -56,8 +56,8 @@ public class ImageVectorizer {
 	 *            the number of vectorization threads to use
 	 * @throws Exception
 	 */
-	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids,
-			int projectionLength, String PCAFileName, int numThreads) throws Exception {
+	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids, int projectionLength,
+			String PCAFileName, int numThreads) throws Exception {
 		int featureLength;
 		if (featureType.equals("surf")) {
 			featureLength = FeatureExtractor.SURFLength;
@@ -75,21 +75,21 @@ public class ImageVectorizer {
 		int numCodebooks = codebookFiles.length;
 		// initialize the VLAD object
 		double[][][] codebooks = new double[numCodebooks][][];
-		int vectorLength = 0;
+		int initialVectorLength = 0;
 		for (int i = 0; i < numCodebooks; i++) {
-			codebooks[i] = AbstractFeatureAggregator.readQuantizer(codebookFiles[i], numCentroids[i],
-					featureLength);
-			vectorLength += codebooks[i].length * featureLength;
+			codebooks[i] = AbstractFeatureAggregator.readQuantizer(codebookFiles[i], numCentroids[i], featureLength);
+			initialVectorLength += codebooks[i].length * featureLength;
 		}
+		targetVectorLength = projectionLength;
 
 		VladAggregatorMultipleVocabularies vladmvoc = new VladAggregatorMultipleVocabularies(codebooks);
 		ImageVectorization.setVladAggregator(vladmvoc);
 
 		// initialize the PCA object
 		PCA PCA = null;
-		if (PCAFileName != null && projectionLength < vectorLength) {
+		if (PCAFileName != null && projectionLength < initialVectorLength) {
 			// initialize the PCA object
-			PCA = new PCA(projectionLength, 1, vectorLength, true);
+			PCA = new PCA(projectionLength, 1, initialVectorLength, true);
 			PCA.loadPCAFromFile(PCAFileName);
 		}
 		ImageVectorization.setPcaProjector(PCA);
@@ -101,8 +101,8 @@ public class ImageVectorizer {
 	}
 
 	/**
-	 * Submits a new image vectorization task for an image that is stored in the disk and has not yet been
-	 * read into a BufferedImage object.
+	 * Submits a new image vectorization task for an image that is stored in the disk and has not yet been read into a
+	 * BufferedImage object.
 	 * 
 	 * @param imageFolder
 	 *            The folder where the image resides.
@@ -110,14 +110,14 @@ public class ImageVectorizer {
 	 *            The name of the image.
 	 */
 	public void submitImageVectorizationTask(String imageFolder, String imageName) {
-		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName, vectorLength);
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName, targetVectorLength);
 		pool.submit(call);
 		numPendingTasks++;
 	}
 
 	/**
-	 * This methods submits an image vectorization task for an image that has already been read into a
-	 * BufferedImage object.
+	 * This methods submits an image vectorization task for an image that has already been read into a BufferedImage
+	 * object.
 	 * 
 	 * @param imageName
 	 *            The name of the image.
@@ -125,7 +125,7 @@ public class ImageVectorizer {
 	 *            The BufferedImage object of the image.
 	 */
 	public void submitImageVectorizationTask(String imageName, BufferedImage im) {
-		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, vectorLength);
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, targetVectorLength);
 		pool.submit(call);
 		numPendingTasks++;
 	}

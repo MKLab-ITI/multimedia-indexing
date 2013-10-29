@@ -1,24 +1,22 @@
-package gr.iti.mklab.visual.learning.codebook;
+package gr.iti.mklab.visual.quantization;
 
 import gr.iti.mklab.visual.utilities.Normalization;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 
 import weka.core.Instances;
 import weka.core.converters.CSVLoader;
 
 /**
- * This class creates a codebook from a set of local features using a slightly modified (to produce some additional
- * output) version of Weka's SimpleKMeans class. The local features should be stored in an arff or csv formated file. It
- * supports l2 or power+l2 normalization of the local features prior to clustering.s supports parallel execution!
+ * This class uses the {@link AbstractQuantizerLearning} class to create a codebook from a set of local features that
+ * are stored in an arff or csv formated file. It supports application of l2 or power+l2 normalization of the local
+ * features prior to clustering.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */
-public class CodebookGeneration {
+public class CodebookLearning {
 
 	/**
 	 * The power to use when power-normalization is applied on the local features.
@@ -80,36 +78,10 @@ public class CodebookGeneration {
 				}
 			}
 		}
-		System.out.println("--" + data.numInstances() + " descriptors loaded--");
-		System.out.println("Descriptor dimensionality: " + data.numAttributes());
-		System.out.println("Clustering settings:");
-		System.out.println("Num clusters: " + numClusters);
-		System.out.println("Max iterations: " + maxIterations);
-		System.out.println("Seed: " + seed);
 
-		long start = System.currentTimeMillis();
-		// create a new instance for the Clusterer
-		SimpleKMeansWithOutput clusterer = new SimpleKMeansWithOutput();
-		clusterer.setSeed(seed);
-		clusterer.setNumClusters(numClusters);
-		clusterer.setMaxIterations(maxIterations);
-		clusterer.setNumExecutionSlots(numSlots);
-		clusterer.setFastDistanceCalc(false);
-		// build the clusterer
-		clusterer.buildClusterer(data);
-		System.out.println(clusterer.toString());
-		long end = System.currentTimeMillis();
-
-		// create a new file to store the codebook
-		BufferedWriter out = new BufferedWriter(new FileWriter(new File(filepath + "_codebook-" + data.numAttributes()
-				+ "A-" + numClusters + "C-" + maxIterations + "I-" + seed + "S" + "_" + normalization + ".arff")));
-		// write the results of the clustering to the new file
-		Instances clusterCentroids = clusterer.getClusterCentroids();
-		for (int i = 0; i < numClusters; i++) {
-			out.write(clusterCentroids.instance(i).toStringNoWeight() + "\n");
-		}
-		out.close();
-
-		System.out.println("Total execution time: " + (end - start));
+		String outFilename = filepath + "_codebook-" + data.numAttributes() + "A-" + numClusters + "C-" + maxIterations
+				+ "I-" + seed + "S" + "_" + normalization + ".csv";
+		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed, numSlots);
 	}
+
 }

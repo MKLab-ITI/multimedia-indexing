@@ -73,8 +73,7 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	}
 
 	/**
-	 * This constructor is used when the image should be read into a BufferedImage object from the given
-	 * folder.
+	 * This constructor is used when the image should be read into a BufferedImage object from the given folder.
 	 * 
 	 * @param imageFolder
 	 *            The folder (full path) where the image resides
@@ -208,8 +207,8 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 
 		ImageVectorization imvec = new ImageVectorization(imageFolder, imagFilename, targetLength);
 		ImageVectorization.setFeatureExtractor(new SURFExtractor());
-		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles,
-				numCentroids, FeatureExtractor.SURFLength));
+		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles, numCentroids,
+				FeatureExtractor.SURFLength));
 		if (targetLength < initialLength) {
 			PCA pca = new PCA(targetLength, 1, initialLength, true);
 			pca.loadPCAFromFile(pcaFilename);

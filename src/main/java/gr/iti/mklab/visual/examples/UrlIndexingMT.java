@@ -19,7 +19,7 @@ import java.util.Date;
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public class UrlIndexingExampleMT {
+public class UrlIndexingMT {
 
 	public static final int maxIndexSize = 10000000;
 
@@ -46,7 +46,8 @@ public class UrlIndexingExampleMT {
 	 * @param args
 	 *            [9] projection length
 	 * @param args
-	 *            [11] minimum interval between two calls in msec (e.g. 60 ~ 1000calls/min, acts as a safeguard)
+	 *            [11] minimum interval between two calls in msec (e.g. 60 ~ 1000calls/min, acts as a
+	 *            safeguard)
 	 * @param args
 	 *            [12] start indexing at this line index inclusive
 	 * @param args
@@ -91,14 +92,15 @@ public class UrlIndexingExampleMT {
 		downloader.setSaveOriginal(saveOriginal);
 		downloader.setSaveThumb(false);
 		downloader.setFollowRedirects(followRedirects);
-		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids, projectionLength,
-				pcaFile, numVectorizationThreads);
+		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids,
+				projectionLength, pcaFile, numVectorizationThreads);
 		// The folder where the plain index is stored.
 		// String BDBEnvHome = indexFolder + "BDB_" + projectionLength + "_plain_" +
 		// System.currentTimeMillis();
 		String BDBEnvHome = indexFolder + "BDB_" + projectionLength;
 
-		AbstractSearchStructure index = new Linear(projectionLength, maxIndexSize, false, BDBEnvHome, false, true, 0);
+		AbstractSearchStructure index = new Linear(projectionLength, maxIndexSize, false, BDBEnvHome, false,
+				true, 0);
 
 		BufferedReader in = new BufferedReader(new FileReader(new File(urlsFile)));
 		// skip startLine lines

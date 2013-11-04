@@ -10,13 +10,13 @@ import java.io.FilenameFilter;
 import java.util.Date;
 
 /**
- * This class demonstrates multi-threaded VLAD+SURF vectorization and @{link Linear} indexing of the images in a given
- * folder.
+ * This class demonstrates multi-threaded VLAD+SURF vectorization and @{link Linear} indexing of the images in
+ * a given folder.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public class FolderIndexingExampleMT {
+public class FolderIndexingMT {
 
 	public static final int maxIndexSize = 10000000;
 
@@ -34,7 +34,9 @@ public class FolderIndexingExampleMT {
 	 * @param args
 	 *            [5] projection length
 	 * @param args
-	 *            [6] number of processor threads to be used for vectorization (compute-intensive task)
+	 *            [6] image will be scaled at this maximum number of pixels before vectorization
+	 * @param args
+	 *            [7] number of processor threads to be used for vectorization (compute-intensive task)
 	 * 
 	 * @throws Exception
 	 */
@@ -50,16 +52,19 @@ public class FolderIndexingExampleMT {
 		}
 		String pcaFile = args[4];
 		int projectionLength = Integer.parseInt(args[5]);
+		int maxImageSizeInPixels = Integer.parseInt(args[6]);
 		// suggestion for compute-intensive tasks by
 		// http://codeidol.com/java/java-concurrency/Applying-Thread-Pools/Sizing-Thread-Pools/
 		// int numVectorizationThreads = Runtime.getRuntime().availableProcessors() + 1;
-		int numVectorizationThreads = Integer.parseInt(args[6]);
+		int numVectorizationThreads = Integer.parseInt(args[7]);
 
 		// Initialize the vectorizer and the indexer
-		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids, projectionLength,
-				pcaFile, numVectorizationThreads);
+		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids,
+				projectionLength, pcaFile, numVectorizationThreads);
+		vectorizer.setMaxImageSizeInPixels(maxImageSizeInPixels);
 		String BDBEnvHome = indexFolder + "BDB_" + projectionLength;
-		AbstractSearchStructure index = new Linear(projectionLength, maxIndexSize, false, BDBEnvHome, false, true, 0);
+		AbstractSearchStructure index = new Linear(projectionLength, maxIndexSize, false, BDBEnvHome, false,
+				true, 0);
 
 		// load the images
 		File dir = new File(imagesFolder);
@@ -93,8 +98,8 @@ public class FolderIndexingExampleMT {
 					vectorizer.submitImageVectorizationTask(imagesFolder, imageName);
 				}
 				submittedVectorizationsCounter++;
-				System.out.println("Submitted vectorization tasks: " + submittedVectorizationsCounter + " image:"
-						+ imageName);
+				System.out.println("Submitted vectorization tasks: " + submittedVectorizationsCounter
+						+ " image:" + imageName);
 			}
 
 			// try to get an image vectorization result and to index the vector

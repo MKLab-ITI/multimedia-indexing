@@ -134,7 +134,8 @@ public class PQ extends AbstractSearchStructure {
 	 *            The initial value of the load counter
 	 * @throws Exception
 	 */
-	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors, int numProductCentroids, TransformationType transformation, boolean countSizeOnLoad,
+	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
+			int numProductCentroids, TransformationType transformation, boolean countSizeOnLoad,
 			int loadCounter) throws Exception {
 		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter);
 		this.numSubVectors = numSubVectors;
@@ -188,8 +189,10 @@ public class PQ extends AbstractSearchStructure {
 	 *            The type of transformation to perform on each vector
 	 * @throws Exception
 	 */
-	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors, int numProductCentroids, TransformationType transformation) throws Exception {
-		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids, transformation, true, 0);
+	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
+			int numProductCentroids, TransformationType transformation) throws Exception {
+		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
+				transformation, true, 0);
 	}
 
 	/**
@@ -254,11 +257,13 @@ public class PQ extends AbstractSearchStructure {
 		}
 	}
 
-	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] query) throws Exception {
+	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] query)
+			throws Exception {
 		return computeKnnADC(k, query);
 	}
 
-	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, int internalId) throws Exception {
+	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, int internalId)
+			throws Exception {
 		return computeKnnSDC(k, internalId);
 	}
 
@@ -340,7 +345,8 @@ public class PQ extends AbstractSearchStructure {
 					pqSubCodeQuery += 128;
 				}
 				for (int m = 0; m < subVectorLength; m++) {
-					l2distance += (productQuantizer[j][pqSubCode][m] - productQuantizer[j][pqSubCodeQuery][m]) * (productQuantizer[j][pqSubCode][m] - productQuantizer[j][pqSubCodeQuery][m]);
+					l2distance += (productQuantizer[j][pqSubCode][m] - productQuantizer[j][pqSubCodeQuery][m])
+							* (productQuantizer[j][pqSubCode][m] - productQuantizer[j][pqSubCodeQuery][m]);
 					if (l2distance > lowest) {
 						break; // break the inner loop
 					}
@@ -374,7 +380,8 @@ public class PQ extends AbstractSearchStructure {
 			int subVectorStart = i * subVectorLength;
 			for (int j = 0; j < numProductCentroids; j++) {
 				for (int k = 0; k < subVectorLength; k++) {
-					distances[i][j] += (qVector[subVectorStart + k] - productQuantizer[i][j][k]) * (qVector[subVectorStart + k] - productQuantizer[i][j][k]);
+					distances[i][j] += (qVector[subVectorStart + k] - productQuantizer[i][j][k])
+							* (qVector[subVectorStart + k] - productQuantizer[i][j][k]);
 				}
 			}
 		}
@@ -397,7 +404,8 @@ public class PQ extends AbstractSearchStructure {
 		for (int i = 0; i < numProductCentroids; i++) {
 			double distance = 0;
 			for (int j = 0; j < subVectorLength; j++) {
-				distance += (productQuantizer[subQuantizerIndex][i][j] - subvector[j]) * (productQuantizer[subQuantizerIndex][i][j] - subvector[j]);
+				distance += (productQuantizer[subQuantizerIndex][i][j] - subvector[j])
+						* (productQuantizer[subQuantizerIndex][i][j] - subvector[j]);
 				if (distance >= minDistance) {
 					break;
 				}
@@ -431,7 +439,8 @@ public class PQ extends AbstractSearchStructure {
 		}
 
 		int counter = 0;
-		while (cursor.getNext(foundKey, foundData, LockMode.DEFAULT) == OperationStatus.SUCCESS && counter < maxNumVectors) {
+		while (cursor.getNext(foundKey, foundData, LockMode.DEFAULT) == OperationStatus.SUCCESS
+				&& counter < maxNumVectors) {
 			TupleInput input = TupleBinding.entryToInput(foundData);
 
 			if (numProductCentroids <= 256) {

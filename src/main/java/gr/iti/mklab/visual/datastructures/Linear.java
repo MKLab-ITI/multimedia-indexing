@@ -70,7 +70,8 @@ public class Linear extends AbstractSearchStructure {
 	 *            The initial value of the load counter
 	 * @throws Exception
 	 */
-	public Linear(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, boolean loadIndexInMemory, boolean countSizeOnLoad, int loadCounter) throws Exception {
+	public Linear(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome,
+			boolean loadIndexInMemory, boolean countSizeOnLoad, int loadCounter) throws Exception {
 		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter);
 		createOrOpenBDBEnvAndDbs(BDBEnvHome);
 		this.loadIndexInMemory = loadIndexInMemory;
@@ -141,7 +142,8 @@ public class Linear extends AbstractSearchStructure {
 	 *             If the index is not loaded in memory
 	 * 
 	 */
-	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] queryVector) throws Exception {
+	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] queryVector)
+			throws Exception {
 		if (!loadIndexInMemory) {
 			throw new Exception("Cannot execute query because the index is not loaded in memory!");
 		}
@@ -153,7 +155,8 @@ public class Linear extends AbstractSearchStructure {
 			int startIndex = i * vectorLength;
 			double l2distance = 0;
 			for (int j = 0; j < vectorLength; j++) {
-				l2distance += (queryVector[j] - vectorsList.getQuick(startIndex + j)) * (queryVector[j] - vectorsList.getQuick(startIndex + j));
+				l2distance += (queryVector[j] - vectorsList.getQuick(startIndex + j))
+						* (queryVector[j] - vectorsList.getQuick(startIndex + j));
 				if (l2distance > lowest) {
 					skip = true;
 					break;
@@ -211,7 +214,8 @@ public class Linear extends AbstractSearchStructure {
 		}
 
 		int counter = 0;
-		while (cursor.getNext(foundKey, foundData, null) == OperationStatus.SUCCESS && counter < maxNumVectors) {
+		while (cursor.getNext(foundKey, foundData, null) == OperationStatus.SUCCESS
+				&& counter < maxNumVectors) {
 			TupleInput input = TupleBinding.entryToInput(foundData);
 			double[] vector = new double[vectorLength];
 			for (int i = 0; i < vectorLength; i++) {

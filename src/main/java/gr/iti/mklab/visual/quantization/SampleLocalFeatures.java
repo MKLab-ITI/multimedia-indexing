@@ -10,9 +10,9 @@ import java.io.IOException;
 import java.util.Random;
 
 /**
- * This class is used for taking samples of local features (in csv format) which can then be used for learning visual
- * vocabularies. The local features of each image should be stored in a separate csv file (binary files are currently
- * not supported).
+ * This class is used for taking samples of local features (in csv format) which can then be used for learning
+ * visual vocabularies. The local features of each image should be stored in a separate csv file (binary files
+ * are currently not supported).
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */
@@ -70,7 +70,8 @@ public class SampleLocalFeatures {
 		BufferedWriter[] outs = new BufferedWriter[numSamples];
 		Random[] rands = new Random[numSamples];
 		for (int k = 0; k < numSamples; k++) {
-			outs[k] = new BufferedWriter(new FileWriter(path + "sample" + targetNumFeatures + "s" + k + ".csv"));
+			outs[k] = new BufferedWriter(new FileWriter(path + "sample" + targetNumFeatures + "s" + k
+					+ ".csv"));
 			rands[k] = new Random(k);
 		}
 

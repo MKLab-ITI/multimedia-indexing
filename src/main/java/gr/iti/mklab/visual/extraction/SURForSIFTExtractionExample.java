@@ -10,9 +10,9 @@ import java.io.FilenameFilter;
 import javax.imageio.ImageIO;
 
 /**
- * Extracts SURF or SIFT features from images contained in a directory (only .jpg or .png files) and writes a .surf(b)
- * or .sift(b) file for each image. The feature files are written in a directory named surf or sift that is created (if
- * it does not already exist) inside the images' directory.
+ * Extracts SURF or SIFT features from images contained in a directory (only .jpg or .png files) and writes a
+ * .surf(b) or .sift(b) file for each image. The feature files are written in a directory named surf or sift
+ * that is created (if it does not already exist) inside the images' directory.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 

@@ -29,9 +29,8 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 /**
- * This class implements indexing using and Inverted File and Product
- * Quantization (IVFPQ) and search using Asymmetric (IVFADC) or Symmetric
- * (IVFSDC) Distance Computation.
+ * This class implements indexing using and Inverted File and Product Quantization (IVFPQ) and search using
+ * Asymmetric (IVFADC) or Symmetric (IVFSDC) Distance Computation.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
@@ -54,29 +53,27 @@ public class IVFPQ extends AbstractSearchStructure {
 	private int subVectorLength;
 
 	/**
-	 * The number of centroids used to quantize each sub-vector. (Depending on
-	 * this number we use a different type for storing the quantization code of
-	 * each sub-vector. For k<=256=2^8 centroids we use a byte (8 bits per
-	 * subvector), for k>256 we use a short (16 bits per subvector).
+	 * The number of centroids used to quantize each sub-vector. (Depending on this number we use a different
+	 * type for storing the quantization code of each sub-vector. For k<=256=2^8 centroids we use a byte (8
+	 * bits per subvector), for k>256 we use a short (16 bits per subvector).
 	 * 
 	 */
 	private int numProductCentroids;
 
 	/**
-	 * The product-quantization codes for all vectors are stored in this list if
-	 * the code can fit in the byte range.
+	 * The product-quantization codes for all vectors are stored in this list if the code can fit in the byte
+	 * range.
 	 */
 	private TByteArrayList[] pqByteCodes;
 
 	/**
-	 * The product-quantization codes for all vector are stored in this list if
-	 * the code cannot fit in the byte range.
+	 * The product-quantization codes for all vector are stored in this list if the code cannot fit in the
+	 * byte range.
 	 */
 	private TShortArrayList[] pqShortCodes;
 
 	/**
-	 * The inverted lists containing the internal ids of the vectors qunatized
-	 * in each list.
+	 * The inverted lists containing the internal ids of the vectors qunatized in each list.
 	 */
 	private TIntArrayList[] invertedLists;
 
@@ -97,53 +94,45 @@ public class IVFPQ extends AbstractSearchStructure {
 	/**
 	 * The coarse quantizer.<br>
 	 * 
-	 * A two dimensional array storing the coarse quantizer. The 1st dimension
-	 * goes from 1...numCoarseCentroids and indexes the centroids of the coarse
-	 * quantizer. The 2nd dimension goes from 1...vectorLength and indexes the
-	 * dimensions of each centroid.
+	 * A two dimensional array storing the coarse quantizer. The 1st dimension goes from
+	 * 1...numCoarseCentroids and indexes the centroids of the coarse quantizer. The 2nd dimension goes from
+	 * 1...vectorLength and indexes the dimensions of each centroid.
 	 */
 	private double[][] coarseQuantizer;
 
 	/**
-	 * The sub-quantizers of the product quantizer. They are needed for indexing
-	 * and search using PQ.<br>
+	 * The sub-quantizers of the product quantizer. They are needed for indexing and search using PQ.<br>
 	 * 
-	 * A three dimensional array storing the sub-quantizers of the product
-	 * quantizer. The first dimension goes from 1..numSubquantizers and indexes
-	 * the sub-quantizers. The second dimension goes from 1..numProductCentroids
-	 * and indexes the centroids of each sub-quantizer of the product quantizer.
-	 * The third dimension goes from 1...subVectorLength and indexes the
-	 * components of each centroid.
+	 * A three dimensional array storing the sub-quantizers of the product quantizer. The first dimension goes
+	 * from 1..numSubquantizers and indexes the sub-quantizers. The second dimension goes from
+	 * 1..numProductCentroids and indexes the centroids of each sub-quantizer of the product quantizer. The
+	 * third dimension goes from 1...subVectorLength and indexes the components of each centroid.
 	 */
 	private double[][][] productQuantizer;
 
 	/**
-	 * The type of transformation to perform on the vectors prior to product
-	 * quantization.
+	 * The type of transformation to perform on the vectors prior to product quantization.
 	 */
 	private PQ.TransformationType transformation;
 
 	/**
-	 * This object is used for applying random permutation prior to product
-	 * quantization.
+	 * This object is used for applying random permutation prior to product quantization.
 	 */
 	private RandomPermutation rp;
 
 	/**
-	 * This object is used for applying random rotation prior to product
-	 * quantization.
+	 * This object is used for applying random rotation prior to product quantization.
 	 */
 	private RandomRotation rr;
 
 	/**
-	 * The seed used in random transformations. Should be the same as the one
-	 * used at learning time.
+	 * The seed used in random transformations. Should be the same as the one used at learning time.
 	 */
 	public final int seed = 1;
 
 	/**
-	 * Whether to use a disk ordered cursor or not. This setting changes how
-	 * fast the index will be loaded in main memory.
+	 * Whether to use a disk ordered cursor or not. This setting changes how fast the index will be loaded in
+	 * main memory.
 	 */
 	public final boolean useDiskOrderedCursor = false;
 
@@ -155,8 +144,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @param maxNumVectors
 	 *            The maximum allowable size (number of vectors) of the index
 	 * @param readOnly
-	 *            If true the persistent store will opened only for read access
-	 *            (allows multiple opens)
+	 *            If true the persistent store will opened only for read access (allows multiple opens)
 	 * @param BDBEnvHome
 	 *            The BDB environment home directory
 	 * @param numSubVectors
@@ -168,18 +156,15 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @param numCoarseCentroids
 	 *            The number of centroids of the coarse quantizer
 	 * @param countSizeOnLoad
-	 *            Whether the load counter will be initialized by the size of
-	 *            the persistent store
+	 *            Whether the load counter will be initialized by the size of the persistent store
 	 * @param loadCounter
 	 *            The initial value of the load counter
 	 * @throws Exception
 	 */
-	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly,
-			String BDBEnvHome, int numSubVectors, int numProductCentroids,
-			TransformationType transformation, int numCoarseCentroids,
+	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
+			int numProductCentroids, TransformationType transformation, int numCoarseCentroids,
 			boolean countSizeOnLoad, int loadCounter) throws Exception {
-		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad,
-				loadCounter);
+		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter);
 		this.numSubVectors = numSubVectors;
 		if (vectorLength % numSubVectors > 0) {
 			throw new Exception("The given number of subvectors is not valid!");
@@ -188,8 +173,7 @@ public class IVFPQ extends AbstractSearchStructure {
 		this.numProductCentroids = numProductCentroids;
 		this.transformation = transformation;
 		this.numCoarseCentroids = numCoarseCentroids;
-		w = (int) (numCoarseCentroids * 0.1); // by default set w to 10% of the
-												// lists
+		w = (int) (numCoarseCentroids * 0.1); // by default set w to 10% of the lists
 
 		if (transformation == TransformationType.RandomRotation) {
 			this.rr = new RandomRotation(seed, vectorLength);
@@ -204,10 +188,7 @@ public class IVFPQ extends AbstractSearchStructure {
 		dbConf.setReadOnly(readOnly);
 		dbConf.setTransactional(transactional);
 		dbConf.setAllowCreate(true); // db will be created if it does not exist
-		iidToIvfpqDB = dbEnv.openDatabase(null, "ivfadc", dbConf); // create/open
-																	// the db
-																	// using
-																	// config
+		iidToIvfpqDB = dbEnv.openDatabase(null, "ivfadc", dbConf); // create/open the db using config
 
 		invertedLists = new TIntArrayList[numCoarseCentroids];
 		int initialListCapacity = (int) ((double) maxNumVectors / numCoarseCentroids);
@@ -220,14 +201,11 @@ public class IVFPQ extends AbstractSearchStructure {
 		}
 
 		for (int i = 0; i < numCoarseCentroids; i++) {
-			// fixed initial size for each list, allows space efficiency
-			// measurements
+			// fixed initial size for each list, allows space efficiency measurements
 			if (numProductCentroids <= 256) {
-				pqByteCodes[i] = new TByteArrayList(initialListCapacity
-						* numSubVectors);
+				pqByteCodes[i] = new TByteArrayList(initialListCapacity * numSubVectors);
 			} else {
-				pqShortCodes[i] = new TShortArrayList(initialListCapacity
-						* numSubVectors);
+				pqShortCodes[i] = new TShortArrayList(initialListCapacity * numSubVectors);
 			}
 			invertedLists[i] = new TIntArrayList(initialListCapacity);
 			// no initial size set, allows more efficient space usage
@@ -245,8 +223,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @param maxNumVectors
 	 *            The maximum allowable size (number of vectors) of the index
 	 * @param readOnly
-	 *            If true the persistent store will opened only for read access
-	 *            (allows multiple opens)
+	 *            If true the persistent store will opened only for read access (allows multiple opens)
 	 * @param BDBEnvHome
 	 *            The BDB environment home directory
 	 * @param numSubVectors
@@ -259,13 +236,11 @@ public class IVFPQ extends AbstractSearchStructure {
 	 *            The number of centroids of the coarse quantizer
 	 * @throws Exception
 	 */
-	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly,
-			String BDBEnvHome, int numSubVectors, int numProductCentroids,
-			TransformationType transformation, int numCoarseCentroids)
+	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
+			int numProductCentroids, TransformationType transformation, int numCoarseCentroids)
 			throws Exception {
-		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors,
-				numProductCentroids, transformation, numCoarseCentroids, true,
-				0);
+		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
+				transformation, numCoarseCentroids, true, 0);
 	}
 
 	/**
@@ -277,15 +252,13 @@ public class IVFPQ extends AbstractSearchStructure {
 	 */
 	public void loadProductQuantizer(String filename) throws Exception {
 		productQuantizer = new double[numSubVectors][numProductCentroids][subVectorLength];
-		BufferedReader in = new BufferedReader(new FileReader(
-				new File(filename)));
+		BufferedReader in = new BufferedReader(new FileReader(new File(filename)));
 		for (int i = 0; i < numSubVectors; i++) {
 			for (int j = 0; j < numProductCentroids; j++) {
 				String line = in.readLine();
 				String[] centroidString = line.split(",");
 				for (int k = 0; k < subVectorLength; k++) {
-					productQuantizer[i][j][k] = Double
-							.parseDouble(centroidString[k]);
+					productQuantizer[i][j][k] = Double.parseDouble(centroidString[k]);
 				}
 			}
 		}
@@ -301,8 +274,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	 */
 	public void loadCoarseQuantizer(String filename) throws IOException {
 		coarseQuantizer = new double[numCoarseCentroids][vectorLength];
-		coarseQuantizer = AbstractFeatureAggregator.readQuantizer(filename,
-				numCoarseCentroids, vectorLength);
+		coarseQuantizer = AbstractFeatureAggregator.readQuantizer(filename, numCoarseCentroids, vectorLength);
 	}
 
 	/**
@@ -317,11 +289,9 @@ public class IVFPQ extends AbstractSearchStructure {
 			throw new Exception("The dimensionality of the vector is wrong!");
 		}
 
-		// quantize to the closest centroid of the coarse quantizer and compute
-		// residual vector
+		// quantize to the closest centroid of the coarse quantizer and compute residual vector
 		int nearestCoarseCentroidIndex = computeNearestCoarseIndex(vector);
-		double[] residualVector = computeResidualVector(vector,
-				nearestCoarseCentroidIndex);
+		double[] residualVector = computeResidualVector(vector, nearestCoarseCentroidIndex);
 
 		// apply a random transformation if needed
 		if (transformation == TransformationType.RandomRotation) {
@@ -337,10 +307,8 @@ public class IVFPQ extends AbstractSearchStructure {
 			// take the appropriate sub-vector
 			int fromIdex = i * subVectorLength;
 			int toIndex = fromIdex + subVectorLength;
-			double[] subvector = Arrays.copyOfRange(residualVector, fromIdex,
-					toIndex);
-			// assign the sub-vector to the nearest centroid of the respective
-			// sub-quantizer
+			double[] subvector = Arrays.copyOfRange(residualVector, fromIdex, toIndex);
+			// assign the sub-vector to the nearest centroid of the respective sub-quantizer
 			pqCode[i] = computeNearestProductIndex(subvector, i);
 		}
 
@@ -349,40 +317,27 @@ public class IVFPQ extends AbstractSearchStructure {
 
 		if (numProductCentroids <= 256) {
 			byte[] pqByteCode = PQ.transformToByte(pqCode);
-			pqByteCodes[nearestCoarseCentroidIndex].add(pqByteCode); // append
-																		// the
-																		// ram-based
-																		// index
-			appendPersistentIndex(nearestCoarseCentroidIndex, pqByteCode); // append
-																			// the
-																			// disk-based
-																			// index
+			pqByteCodes[nearestCoarseCentroidIndex].add(pqByteCode); // append the ram-based index
+			appendPersistentIndex(nearestCoarseCentroidIndex, pqByteCode); // append the disk-based index
 		} else {
 			short[] pqShortCode = PQ.transformToShort(pqCode);
-			pqShortCodes[nearestCoarseCentroidIndex].add(pqShortCode); // append
-																		// the
-																		// ram-based
-																		// index
-			appendPersistentIndex(nearestCoarseCentroidIndex, pqShortCode); // append
-																			// the
-																			// disk-based
-																			// index
+			pqShortCodes[nearestCoarseCentroidIndex].add(pqShortCode); // append the ram-based index
+			appendPersistentIndex(nearestCoarseCentroidIndex, pqShortCode); // append the disk-based index
 		}
 	}
 
-	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(
-			int k, double[] query) throws Exception {
+	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] query)
+			throws Exception {
 		return computeKnnIVFADC(k, query);
 	}
 
-	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(
-			int k, int internalId) throws Exception {
+	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, int internalId)
+			throws Exception {
 		return computeKnnIVFSDC(k, internalId);
 	}
 
 	/**
-	 * Computes and returns the k nearest neighbors of the query vector using
-	 * the IVFADC approach.
+	 * Computes and returns the k nearest neighbors of the query vector using the IVFADC approach.
 	 * 
 	 * @param k
 	 *            The number of nearest neighbors to be returned
@@ -391,21 +346,16 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @return
 	 * @throws Exception
 	 */
-	private BoundedPriorityQueue<Result> computeKnnIVFADC(int k,
-			double[] qVector) throws Exception {
-		BoundedPriorityQueue<Result> nn = new BoundedPriorityQueue<Result>(
-				new Result(), k);
+	private BoundedPriorityQueue<Result> computeKnnIVFADC(int k, double[] qVector) throws Exception {
+		BoundedPriorityQueue<Result> nn = new BoundedPriorityQueue<Result>(new Result(), k);
 
 		// find the w nearest coarse centroids
-		int[] nearestCoarseCentroidIndices = computeNearestCoarseIndices(
-				qVector, w);
+		int[] nearestCoarseCentroidIndices = computeNearestCoarseIndices(qVector, w);
 
 		for (int i = 0; i < w; i++) { // for each assignment
-			// quantize to the i-th closest centroid of the coarse quantizer and
-			// compute residual vector
+			// quantize to the i-th closest centroid of the coarse quantizer and compute residual vector
 			int nearestCoarseIndex = nearestCoarseCentroidIndices[i];
-			double[] residualVectorQuery = computeResidualVector(qVector,
-					nearestCoarseIndex);
+			double[] residualVectorQuery = computeResidualVector(qVector, nearestCoarseIndex);
 
 			// apply a random transformation if needed
 			if (transformation == TransformationType.RandomRotation) {
@@ -422,15 +372,13 @@ public class IVFPQ extends AbstractSearchStructure {
 				double l2distance = 0;
 				int codeStart = j * numSubVectors;
 				if (numProductCentroids <= 256) {
-					byte[] pqCode = pqByteCodes[nearestCoarseIndex].toArray(
-							codeStart, numSubVectors);
+					byte[] pqCode = pqByteCodes[nearestCoarseIndex].toArray(codeStart, numSubVectors);
 					for (int m = 0; m < pqCode.length; m++) {
 						// plus 128 because byte range is -128..127
 						l2distance += lookUpTable[m][pqCode[m] + 128];
 					}
 				} else {
-					short[] pqCode = pqShortCodes[nearestCoarseIndex].toArray(
-							codeStart, numSubVectors);
+					short[] pqCode = pqShortCodes[nearestCoarseIndex].toArray(codeStart, numSubVectors);
 					for (int m = 0; m < pqCode.length; m++) {
 						l2distance += lookUpTable[m][pqCode[m]];
 					}
@@ -449,27 +397,24 @@ public class IVFPQ extends AbstractSearchStructure {
 	 *            The number of nearest neighbors to be returned
 	 * @param iid
 	 *            The internal id of the query vector (code actually)
-	 * @return A bounded priority queue of Result objects, which contains the k
-	 *         nearest neighbors along with their iids and distances from the
-	 *         query vector, ordered by lowest distance.
+	 * @return A bounded priority queue of Result objects, which contains the k nearest neighbors along with
+	 *         their iids and distances from the query vector, ordered by lowest distance.
 	 */
 	private BoundedPriorityQueue<Result> computeKnnIVFSDC(int k, int iid) {
 		return null;
 	}
 
 	/**
-	 * Takes a (residual) query vector as input and returns a lookup table
-	 * containing the distance between each sub-vector from each centroid of the
-	 * corresponding sub-quantizer. The calculation of this look-up table
-	 * requires numSubVectors*numProductCentroids*subVectorLength
-	 * multiplications. After this calculation, the distance between the query
-	 * and any vector in the database can be computed in constant time.
+	 * Takes a (residual) query vector as input and returns a lookup table containing the distance between
+	 * each sub-vector from each centroid of the corresponding sub-quantizer. The calculation of this look-up
+	 * table requires numSubVectors*numProductCentroids*subVectorLength multiplications. After this
+	 * calculation, the distance between the query and any vector in the database can be computed in constant
+	 * time.
 	 * 
 	 * @param qVector
 	 *            The (residual) query vector
-	 * @return A lookup table of size numSubVectors * numProductCentroids with
-	 *         the distance of each sub-vector from the centroids of each
-	 *         sub-quantizer
+	 * @return A lookup table of size numSubVectors * numProductCentroids with the distance of each sub-vector
+	 *         from the centroids of each sub-quantizer
 	 */
 	private double[][] computeLookupADC(double[] queryVector) {
 		double[][] distances = new double[numSubVectors][numProductCentroids];
@@ -487,8 +432,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	}
 
 	/**
-	 * Returns the index of the coarse centroid which is closer to the given
-	 * vector.
+	 * Returns the index of the coarse centroid which is closer to the given vector.
 	 * 
 	 * @param vector
 	 *            The vector
@@ -500,8 +444,7 @@ public class IVFPQ extends AbstractSearchStructure {
 		for (int i = 0; i < numCoarseCentroids; i++) {
 			double distance = 0;
 			for (int j = 0; j < vectorLength; j++) {
-				distance += (coarseQuantizer[i][j] - vector[j])
-						* (coarseQuantizer[i][j] - vector[j]);
+				distance += (coarseQuantizer[i][j] - vector[j]) * (coarseQuantizer[i][j] - vector[j]);
 				if (distance >= minDistance) {
 					break;
 				}
@@ -515,8 +458,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	}
 
 	/**
-	 * Returns the indices of the k coarse centroids which are closer to the
-	 * given vector.
+	 * Returns the indices of the k coarse centroids which are closer to the given vector.
 	 * 
 	 * @param vector
 	 *            The vector
@@ -525,16 +467,14 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @return The indices of the k nearest coarse centroids
 	 */
 	protected int[] computeNearestCoarseIndices(double[] vector, int k) {
-		BoundedPriorityQueue<Result> bpq = new BoundedPriorityQueue<Result>(
-				new Result(), k);
+		BoundedPriorityQueue<Result> bpq = new BoundedPriorityQueue<Result>(new Result(), k);
 
 		double lowest = Double.MAX_VALUE;
 		for (int i = 0; i < numCoarseCentroids; i++) {
 			boolean skip = false;
 			double l2distance = 0;
 			for (int j = 0; j < vectorLength; j++) {
-				l2distance += (coarseQuantizer[i][j] - vector[j])
-						* (coarseQuantizer[i][j] - vector[j]);
+				l2distance += (coarseQuantizer[i][j] - vector[j]) * (coarseQuantizer[i][j] - vector[j]);
 				if (l2distance > lowest) {
 					skip = true;
 					break;
@@ -555,8 +495,8 @@ public class IVFPQ extends AbstractSearchStructure {
 	}
 
 	/**
-	 * Finds and returns the index of the centroid of the subquantizer with the
-	 * given index which is closer to the given subvector.
+	 * Finds and returns the index of the centroid of the subquantizer with the given index which is closer to
+	 * the given subvector.
 	 * 
 	 * @param subvector
 	 *            The subvector
@@ -564,8 +504,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	 *            The index of the the subquantizer
 	 * @return The index of the nearest centroid
 	 */
-	private int computeNearestProductIndex(double[] subvector,
-			int subQuantizerIndex) {
+	private int computeNearestProductIndex(double[] subvector, int subQuantizerIndex) {
 		int centroidIndex = -1;
 		double minDistance = Double.MAX_VALUE;
 		for (int i = 0; i < numProductCentroids; i++) {
@@ -591,8 +530,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @param vector
 	 *            The original vector
 	 * @param centroidIndex
-	 *            The centroid of the coarse quantizer from which the original
-	 *            vector is subtracted
+	 *            The centroid of the coarse quantizer from which the original vector is subtracted
 	 * @return The residual vector
 	 */
 	private double[] computeResidualVector(double[] vector, int centroidIndex) {
@@ -622,8 +560,7 @@ public class IVFPQ extends AbstractSearchStructure {
 
 		System.out.println("Maximum number of vectors: " + max);
 		System.out.println("Minimum number of vectors: " + min);
-		System.out.println("Average number of vectors: "
-				+ (sum / numCoarseCentroids));
+		System.out.println("Average number of vectors: " + (sum / numCoarseCentroids));
 
 	}
 
@@ -674,8 +611,7 @@ public class IVFPQ extends AbstractSearchStructure {
 		}
 		cursor.close();
 		long end = System.currentTimeMillis();
-		System.out.println(counter + " images loaded in " + (end - start)
-				+ " ms!");
+		System.out.println(counter + " images loaded in " + (end - start) + " ms!");
 	}
 
 	/**

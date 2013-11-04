@@ -9,8 +9,8 @@ import weka.core.DenseInstance;
 import weka.core.Instances;
 
 /**
- * This class uses the {@link AbstractQuantizerLearning} class to create a coarse quantizer from a set of vectors that
- * are loaded to a {@link Linear} object from a BDB store.
+ * This class uses the {@link AbstractQuantizerLearning} class to create a coarse quantizer from a set of
+ * vectors that are stored in a {@link Linear} index (BDB store).
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */
@@ -23,7 +23,7 @@ public class CoarseQuantizerLearning {
 	 * @param args
 	 *            [1] the dimensionality of the vectors (e.g. 128)
 	 * @param args
-	 *            [2] the number of the vectors to use for learning the coarse quantizer e.g. 200000
+	 *            [2] the number of the vectors to use for learning the coarse quantizer e.g. 20000
 	 * @param args
 	 *            [3] the number of clusters (centroids) to use (e.g. 1024)
 	 * @param args
@@ -32,6 +32,8 @@ public class CoarseQuantizerLearning {
 	 *            [5] the seed given to k-means (e.g. 1)
 	 * @param args
 	 *            [6] the number of execution slots to use for k-means (>1 = parallel execution)
+	 * @param args
+	 *            [7] whether to use kmeans++ for the initialization of the centroids (true/false)
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
@@ -42,6 +44,7 @@ public class CoarseQuantizerLearning {
 		int maxIterations = Integer.parseInt(args[4]);
 		int seed = Integer.parseInt(args[5]);
 		int numSlots = Integer.parseInt(args[6]);
+		boolean kMeansPlusPlus = Boolean.parseBoolean(args[7]);
 
 		// we need to load the vectors into an Instances object
 		Linear linear = new Linear(vectorLength, numLearningVectors, true, learningVectorsBDB, false, true, 0);
@@ -62,7 +65,9 @@ public class CoarseQuantizerLearning {
 			data.add(instance);
 		}
 
-		String outFilename = learningVectorsBDB + "qcoarse_k" + numClusters + "n_" + numLearningVectors + ".csv";
-		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed, numSlots);
+		String outFilename = learningVectorsBDB + "qcoarse_k" + numClusters + "n_" + numLearningVectors
+				+ ".csv";
+		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed,
+				numSlots, kMeansPlusPlus);
 	}
 }

@@ -43,7 +43,8 @@ public class PCAProjectionExample {
 			projectionLengths[i] = Integer.parseInt(projectionLengthsString[i]);
 		}
 
-		Linear fullVectors = new Linear(initialVectorLength, numVectors, true, fullVectorsIndexLocation, false, true, 0);
+		Linear fullVectors = new Linear(initialVectorLength, numVectors, true, fullVectorsIndexLocation,
+				false, true, 0);
 
 		// Loading the pca matrix
 		int numComponents = projectionLengths[projectionLengths.length - 1]; // the largest projection length

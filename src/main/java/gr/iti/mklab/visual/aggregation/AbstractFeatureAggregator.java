@@ -10,8 +10,7 @@ import java.util.ArrayList;
 import com.aliasi.util.BoundedPriorityQueue;
 
 /**
- * All methods which aggregate a set of local image descriptors should extend
- * this abstract class.
+ * All methods which aggregate a set of local image descriptors should extend this abstract class.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
@@ -19,8 +18,7 @@ import com.aliasi.util.BoundedPriorityQueue;
 public abstract class AbstractFeatureAggregator {
 
 	/**
-	 * The codebook (centroids) used to aggregate the vectors. Each centroid is
-	 * stored in a different row.
+	 * The codebook (centroids) used to aggregate the vectors. Each centroid is stored in a different row.
 	 */
 	protected double[][] codebook;
 
@@ -42,8 +40,7 @@ public abstract class AbstractFeatureAggregator {
 	public abstract int getVectorLength();
 
 	/**
-	 * The dimensionality of the local descriptors ( should be equal to the
-	 * dimensionality of each centroid).
+	 * The dimensionality of the local descriptors ( should be equal to the dimensionality of each centroid).
 	 */
 	protected int descriptorLength;
 
@@ -64,8 +61,8 @@ public abstract class AbstractFeatureAggregator {
 	}
 
 	/**
-	 * This method performs some general checks before calling the
-	 * aggregateInternal method which is implemented by each aggregator.
+	 * This method performs some general checks before calling the aggregateInternal method which is
+	 * implemented by each aggregator.
 	 * 
 	 * @param descriptors
 	 *            a set of local descriptors
@@ -75,8 +72,7 @@ public abstract class AbstractFeatureAggregator {
 	public double[] aggregate(double[][] descriptors) throws Exception {
 		if (descriptors.length > 0) {
 			if (descriptors[0].length != descriptorLength) {
-				throw new Exception(
-						"Descriptor length is incompatible with codebook centroid length!");
+				throw new Exception("Descriptor length is incompatible with codebook centroid length!");
 			}
 		}
 		return aggregateInternal(descriptors);
@@ -88,12 +84,11 @@ public abstract class AbstractFeatureAggregator {
 	 * @param descriptors
 	 * @return
 	 */
-	protected abstract double[] aggregateInternal(
-			ArrayList<double[]> descriptors) throws Exception;
+	protected abstract double[] aggregateInternal(ArrayList<double[]> descriptors) throws Exception;
 
 	/**
-	 * This method performs some general checks before calling the
-	 * aggregateInternal method which is implemented by each aggregator.
+	 * This method performs some general checks before calling the aggregateInternal method which is
+	 * implemented by each aggregator.
 	 * 
 	 * @param descriptors
 	 *            a set of local descriptors
@@ -103,8 +98,7 @@ public abstract class AbstractFeatureAggregator {
 	public double[] aggregate(ArrayList<double[]> descriptors) throws Exception {
 		if (descriptors.size() > 0) {
 			if (descriptors.get(0).length != descriptorLength) {
-				throw new Exception(
-						"Descriptor length is incompatible with codebook centroid length!");
+				throw new Exception("Descriptor length is incompatible with codebook centroid length!");
 			}
 		}
 		return aggregateInternal(descriptors);
@@ -116,8 +110,7 @@ public abstract class AbstractFeatureAggregator {
 	 * @param descriptors
 	 * @return
 	 */
-	protected abstract double[] aggregateInternal(double[][] descriptors)
-			throws Exception;
+	protected abstract double[] aggregateInternal(double[][] descriptors) throws Exception;
 
 	protected AbstractFeatureAggregator() {
 
@@ -135,8 +128,7 @@ public abstract class AbstractFeatureAggregator {
 	}
 
 	/**
-	 * Returns the index of the centroid which is closer to the given
-	 * descriptor.
+	 * Returns the index of the centroid which is closer to the given descriptor.
 	 * 
 	 * @param descriptor
 	 * @return
@@ -147,8 +139,7 @@ public abstract class AbstractFeatureAggregator {
 		for (int i = 0; i < numCentroids; i++) {
 			double distance = 0;
 			for (int j = 0; j < descriptorLength; j++) {
-				distance += (codebook[i][j] - descriptor[j])
-						* (codebook[i][j] - descriptor[j]);
+				distance += (codebook[i][j] - descriptor[j]) * (codebook[i][j] - descriptor[j]);
 				// when distance becomes greater than minDistance
 				// break the inner loop and check the next centroid!!!
 				if (distance >= minDistance) {
@@ -164,21 +155,19 @@ public abstract class AbstractFeatureAggregator {
 	}
 
 	/**
-	 * Returns a double array which has the nearest centroid's index as the
-	 * first element and the distance from this centroid as the second element.
+	 * Returns a double array which has the nearest centroid's index as the first element and the distance
+	 * from this centroid as the second element.
 	 * 
 	 * @param descriptor
 	 * @return
 	 */
-	protected double[] computeNearestCentroidIndexAndDistance(
-			double[] descriptor) {
+	protected double[] computeNearestCentroidIndexAndDistance(double[] descriptor) {
 		int centroidIndex = -1;
 		double minDistance = Double.MAX_VALUE;
 		for (int i = 0; i < numCentroids; i++) {
 			double distance = 0;
 			for (int j = 0; j < descriptorLength; j++) {
-				distance += (codebook[i][j] - descriptor[j])
-						* (codebook[i][j] - descriptor[j]);
+				distance += (codebook[i][j] - descriptor[j]) * (codebook[i][j] - descriptor[j]);
 				// when distance becomes greater than minDistance
 				// break the inner loop and check the next centroid!!!
 				if (distance >= minDistance) {
@@ -194,25 +183,22 @@ public abstract class AbstractFeatureAggregator {
 	}
 
 	/**
-	 * Returns the indices of the k centroids which are closer to the given
-	 * descriptor. Can be used for soft quantization. Fast implementation with a
-	 * bounded priority queue. TO DO: early stopping!
+	 * Returns the indices of the k centroids which are closer to the given descriptor. Can be used for soft
+	 * quantization. Fast implementation with a bounded priority queue. TO DO: early stopping!
 	 * 
 	 * @param descriptor
 	 * @param k
 	 * @return
 	 */
 	protected int[] computeKNearestCentroids(double[] descriptor, int k) {
-		BoundedPriorityQueue<Result> bpq = new BoundedPriorityQueue<Result>(
-				new Result(), k);
+		BoundedPriorityQueue<Result> bpq = new BoundedPriorityQueue<Result>(new Result(), k);
 
 		double minDistance = Double.MAX_VALUE;
 		for (int i = 0; i < numCentroids; i++) {
 			double distance = 0;
 			boolean skip = false;
 			for (int j = 0; j < descriptorLength; j++) {
-				distance += (codebook[i][j] - descriptor[j])
-						* (codebook[i][j] - descriptor[j]);
+				distance += (codebook[i][j] - descriptor[j]) * (codebook[i][j] - descriptor[j]);
 				if (distance > minDistance) {
 					skip = true;
 					break;
@@ -234,15 +220,14 @@ public abstract class AbstractFeatureAggregator {
 	}
 
 	/**
-	 * Reads the quantizer (codebook) from the given file and returns it as
-	 * two-dimensional double array.
+	 * Reads the quantizer (codebook) from the given file and returns it as two-dimensional double array.
 	 * 
 	 * @param filename
 	 *            the name of the file containing the codebook
 	 * @throws IOException
 	 */
-	public static double[][] readQuantizer(String filename, int numCentroids,
-			int centroidLength) throws IOException {
+	public static double[][] readQuantizer(String filename, int numCentroids, int centroidLength)
+			throws IOException {
 		double[][] quantizer = new double[numCentroids][centroidLength];
 		// load the codebook
 		BufferedReader in = new BufferedReader(new FileReader(filename));

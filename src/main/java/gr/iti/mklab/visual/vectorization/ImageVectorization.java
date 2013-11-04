@@ -26,7 +26,7 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	/**
 	 * Image will be scaled at this maximum number of pixels before vectorization.
 	 */
-	private static final int maxImageSizeInPixels = 1024 * 768;
+	private int maxImageSizeInPixels = 1024 * 768;
 
 	/**
 	 * The filename of the image.
@@ -81,11 +81,15 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 *            The filename of the image
 	 * @param vectorLength
 	 *            The target length of the vector
+	 * @param maxImageSizeInPixels
+	 *            The maximum image size of in pixels. It the image is larger, it is first scaled down prior to
+	 *            vectorization.
 	 */
-	public ImageVectorization(String imageFolder, String imageFilename, int vectorLength) {
+	public ImageVectorization(String imageFolder, String imageFilename, int vectorLength, int maxImageSizeInPixels) {
 		this.imageFolder = imageFolder;
 		this.imageFilename = imageFilename;
 		this.vectorLength = vectorLength;
+		this.maxImageSizeInPixels = maxImageSizeInPixels;
 	}
 
 	/**
@@ -97,11 +101,15 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 *            A BufferedImage object of the image
 	 * @param vectorLength
 	 *            The target length of the vector
+	 * @param maxImageSizeInPixels
+	 *            The maximum image size of in pixels. It the image is larger, it is first scaled down prior to
+	 *            vectorization.
 	 */
-	public ImageVectorization(String imageFilename, BufferedImage image, int vectorLength) {
+	public ImageVectorization(String imageFilename, BufferedImage image, int vectorLength, int maxImageSizeInPixels) {
 		this.imageFilename = imageFilename;
 		this.vectorLength = vectorLength;
 		this.image = image;
+		this.maxImageSizeInPixels = maxImageSizeInPixels;
 	}
 
 	@Override
@@ -193,19 +201,15 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 * @throws Exception
 	 */
 	public static void main(String args[]) throws Exception {
-		String imageFolder = "C:/Users/lef/Desktop/ITI/data/Holidays/images/";
-		String imagFilename = "100000.jpg";
-		String[] codebookFiles = {
-				"C:/Users/lef/workspace/iti/socialsensor-svn/data/learning_files/codebooks/exp6/surf_l2_128c_0.arff",
-				"C:/Users/lef/workspace/iti/socialsensor-svn/data/learning_files/codebooks/exp6/surf_l2_128c_1.arff",
-				"C:/Users/lef/workspace/iti/socialsensor-svn/data/learning_files/codebooks/exp6/surf_l2_128c_2.arff",
-				"C:/Users/lef/workspace/iti/socialsensor-svn/data/learning_files/codebooks/exp6/surf_l2_128c_3.arff" };
-		int[] numCentroids = { 128, 128, 128, 128 };
-		String pcaFilename = "C:/Users/lef/workspace/iti/socialsensor-svn/data/learning_files/pca/mvoc/pca_surf_4x128_32768to1024.txt";
+		String imageFolder = "C:/images/";
+		String imagFilename = "test.jpg";
+		String[] codebookFiles = { "C:/codebook1.csv", "C:/codebook2.csv", "C:/codebook3.csv", "C:/codebook4.csv" };
+		int[] numCentroids = { 64, 64, 64, 64 };
+		String pcaFilename = "C:/pca.txt";
 		int initialLength = numCentroids.length * numCentroids[0] * FeatureExtractor.SURFLength;
 		int targetLength = 128;
 
-		ImageVectorization imvec = new ImageVectorization(imageFolder, imagFilename, targetLength);
+		ImageVectorization imvec = new ImageVectorization(imageFolder, imagFilename, targetLength, 512 * 384);
 		ImageVectorization.setFeatureExtractor(new SURFExtractor());
 		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles, numCentroids,
 				FeatureExtractor.SURFLength));

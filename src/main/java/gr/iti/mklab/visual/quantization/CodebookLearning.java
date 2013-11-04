@@ -10,9 +10,9 @@ import weka.core.Instances;
 import weka.core.converters.CSVLoader;
 
 /**
- * This class uses the {@link AbstractQuantizerLearning} class to create a codebook from a set of local features that
- * are stored in an arff or csv formated file. It supports application of l2 or power+l2 normalization of the local
- * features prior to clustering.
+ * This class uses the {@link AbstractQuantizerLearning} class to create a codebook from a set of local
+ * features that are stored in an arff or csv formated file. It supports application of l2 or power+l2
+ * normalization of the local features prior to clustering.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */
@@ -25,7 +25,8 @@ public class CodebookLearning {
 
 	/**
 	 * @param args
-	 *            [0] path to the arff or csv formated (without header) file containing a set the local features
+	 *            [0] path to the arff or csv formated (without header) file containing a set the local
+	 *            features
 	 * @param args
 	 *            [1] the number of clusters to create (e.g. 64)
 	 * @param args
@@ -35,7 +36,9 @@ public class CodebookLearning {
 	 * @param args
 	 *            [4] the number of execution slots to use (>1 = parallel execution)
 	 * @param args
-	 *            [5] the type of normalization to apply on the local features (no/l2/power+l2).
+	 *            [5] the type of normalization to apply on the local features (no/l2/power+l2)
+	 * @param args
+	 *            [6] whether to use kmeans++ for the initialization of the centroids (true/false)
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
@@ -45,6 +48,7 @@ public class CodebookLearning {
 		int seed = Integer.parseInt(args[3]);
 		int numSlots = Integer.parseInt(args[4]);
 		String normalization = args[5];
+		boolean kMeansPlusPlus = Boolean.parseBoolean(args[6]);
 
 		Instances data;
 		if (filepath.endsWith(".arff")) { // loading instances from arff file
@@ -79,9 +83,10 @@ public class CodebookLearning {
 			}
 		}
 
-		String outFilename = filepath + "_codebook-" + data.numAttributes() + "A-" + numClusters + "C-" + maxIterations
-				+ "I-" + seed + "S" + "_" + normalization + ".csv";
-		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed, numSlots);
+		String outFilename = filepath + "_codebook-" + data.numAttributes() + "A-" + numClusters + "C-"
+				+ maxIterations + "I-" + seed + "S" + "_" + normalization + ".csv";
+		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed,
+				numSlots, kMeansPlusPlus);
 	}
 
 }

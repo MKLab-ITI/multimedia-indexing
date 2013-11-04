@@ -57,12 +57,12 @@ import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 
 /**
- * <!-- globalinfo-start --> Cluster data using the k means algorithm. Can use either the Euclidean distance (default)
- * or the Manhattan distance. If the Manhattan distance is used, then centroids are computed as the component-wise
- * median rather than mean. For more information see:<br/>
+ * <!-- globalinfo-start --> Cluster data using the k means algorithm. Can use either the Euclidean distance
+ * (default) or the Manhattan distance. If the Manhattan distance is used, then centroids are computed as the
+ * component-wise median rather than mean. For more information see:<br/>
  * <br/>
- * D. Arthur, S. Vassilvitskii: k-means++: the advantages of carefull seeding. In: Proceedings of the eighteenth annual
- * ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.
+ * D. Arthur, S. Vassilvitskii: k-means++: the advantages of carefull seeding. In: Proceedings of the
+ * eighteenth annual ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.
  * <p/>
  * <!-- globalinfo-end -->
  * 
@@ -178,9 +178,9 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	private int[][] m_ClusterMissingCounts;
 
 	/**
-	 * Stats on the full data set for comparison purposes. In case the attribute is numeric the value is the mean if is
-	 * being used the Euclidian distance or the median if Manhattan distance and if the attribute is nominal then it's
-	 * mode is saved.
+	 * Stats on the full data set for comparison purposes. In case the attribute is numeric the value is the
+	 * mean if is being used the Euclidian distance or the median if Manhattan distance and if the attribute
+	 * is nominal then it's mode is saved.
 	 */
 	private double[] m_FullMeansOrMediansOrModes;
 	private double[] m_FullStdDevs;
@@ -341,7 +341,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 			if (clusters[i].numInstances() == 0) {
 				emptyClusterCount++;
 			} else {
-				Future<double[]> futureCentroid = m_executorPool.submit(new KMeansComputeCentroidTask(i, clusters[i]));
+				Future<double[]> futureCentroid = m_executorPool.submit(new KMeansComputeCentroidTask(i,
+						clusters[i]));
 				results.add(futureCentroid);
 			}
 		}
@@ -439,7 +440,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	}
 
 	/**
-	 * Generates a clusterer. Has to initialize all fields of the clusterer that are not being set via options.
+	 * Generates a clusterer. Has to initialize all fields of the clusterer that are not being set via
+	 * options.
 	 * 
 	 * @param data
 	 *            set of instances serving as training data
@@ -512,7 +514,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 		} else {
 			for (int j = initInstances.numInstances() - 1; j >= 0; j--) {
 				instIndex = RandomO.nextInt(j + 1);
-				hk = new DecisionTableHashKey(initInstances.instance(instIndex), initInstances.numAttributes(), true);
+				hk = new DecisionTableHashKey(initInstances.instance(instIndex),
+						initInstances.numAttributes(), true);
 				if (!initC.containsKey(hk)) {
 					m_ClusterCentroids.add(initInstances.instance(instIndex));
 					initC.put(hk, null);
@@ -606,8 +609,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 			m_squaredErrors = new double[m_NumClusters];
 		}
 		long end = System.currentTimeMillis();
-		System.out.println("\nClustering completed in " + (end - start) + " ms and converged in " + m_Iterations
-				+ " iterations");
+		System.out.println("\nClustering completed in " + (end - start) + " ms and converged in "
+				+ m_Iterations + " iterations");
 
 		// calculate errors
 		if (!m_FastDistanceCalc) {
@@ -657,7 +660,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 			double[] distances = new double[data.numInstances()];
 			double[] cumProbs = new double[data.numInstances()];
 			for (int i = 0; i < data.numInstances(); i++) {
-				distances[i] = m_DistanceFunction.distance(data.instance(i), m_ClusterCentroids.instance(iteration));
+				distances[i] = m_DistanceFunction.distance(data.instance(i),
+						m_ClusterCentroids.instance(iteration));
 			}
 
 			// now choose the remaining cluster centers
@@ -720,8 +724,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	}
 
 	/**
-	 * Move the centroid to it's new coordinates. Generate the centroid coordinates based on it's members (objects
-	 * assigned to the cluster of the centroid) and the distance function being used.
+	 * Move the centroid to it's new coordinates. Generate the centroid coordinates based on it's members
+	 * (objects assigned to the cluster of the centroid) and the distance function being used.
 	 * 
 	 * @param centroidIndex
 	 *            index of the centroid which the coordinates will be computed
@@ -832,8 +836,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	 * 
 	 * @param instance
 	 *            the instance to be assigned to a cluster
-	 * @return the number of the assigned cluster as an interger if the class is enumerated, otherwise the predicted
-	 *         value
+	 * @return the number of the assigned cluster as an interger if the class is enumerated, otherwise the
+	 *         predicted value
 	 * @throws Exception
 	 *             if instance could not be classified successfully
 	 */
@@ -879,8 +883,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 		result.addElement(new Option("\tDisplay std. deviations for centroids.\n", "V", 0, "-V"));
 		result.addElement(new Option("\tReplace missing values with mean/mode.\n", "M", 0, "-M"));
 
-		result.add(new Option("\tDistance function to use.\n" + "\t(default: weka.core.EuclideanDistance)", "A", 1,
-				"-A <classname and options>"));
+		result.add(new Option("\tDistance function to use.\n" + "\t(default: weka.core.EuclideanDistance)",
+				"A", 1, "-A <classname and options>"));
 
 		result.add(new Option("\tMaximum number of iterations.\n", "I", 1, "-I <num>"));
 
@@ -889,8 +893,9 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 		result.addElement(new Option("\tEnables faster distance calculations, using cut-off values.\n"
 				+ "\tDisables the calculation/output of squared errors/distances.\n", "fast", 0, "-fast"));
 
-		result.addElement(new Option("\tNumber of execution slots.\n" + "\t(default 1 - i.e. no parallelism)",
-				"num-slots", 1, "-num-slots <num>"));
+		result.addElement(new Option(
+				"\tNumber of execution slots.\n" + "\t(default 1 - i.e. no parallelism)", "num-slots", 1,
+				"-num-slots <num>"));
 
 		Enumeration en = super.listOptions();
 		while (en.hasMoreElements())
@@ -943,8 +948,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	}
 
 	/**
-	 * Set whether to initialize using the probabilistic farthest first like method of the k-means++ algorithm (rather
-	 * than the standard random selection of initial cluster centers).
+	 * Set whether to initialize using the probabilistic farthest first like method of the k-means++ algorithm
+	 * (rather than the standard random selection of initial cluster centers).
 	 * 
 	 * @param k
 	 *            true if the k-means++ method is to be used to select initial cluster centers.
@@ -954,8 +959,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	}
 
 	/**
-	 * Get whether to initialize using the probabilistic farthest first like method of the k-means++ algorithm (rather
-	 * than the standard random selection of initial cluster centers).
+	 * Get whether to initialize using the probabilistic farthest first like method of the k-means++ algorithm
+	 * (rather than the standard random selection of initial cluster centers).
 	 * 
 	 * @return true if the k-means++ method is to be used to select initial cluster centers.
 	 */
@@ -1058,7 +1063,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	 * @return tip text for this property suitable for displaying in the explorer/experimenter gui
 	 */
 	public String distanceFunctionTipText() {
-		return "The distance function to use for instances comparison " + "(default: weka.core.EuclideanDistance). ";
+		return "The distance function to use for instances comparison "
+				+ "(default: weka.core.EuclideanDistance). ";
 	}
 
 	/**
@@ -1149,15 +1155,16 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	 * @return tip text for this property suitable for displaying in the explorer/experimenter gui
 	 */
 	public String numExecutionSlotsTipText() {
-		return "The number of execution slots (threads) to use. " + "Set equal to the number of available cpu/cores";
+		return "The number of execution slots (threads) to use. "
+				+ "Set equal to the number of available cpu/cores";
 	}
 
 	/**
 	 * Set the degree of parallelism to use.
 	 * 
 	 * @param slots
-	 *            the number of tasks to run in parallel when computing the nearest neighbors and evaluating different
-	 *            values of k between the lower and upper bounds
+	 *            the number of tasks to run in parallel when computing the nearest neighbors and evaluating
+	 *            different values of k between the lower and upper bounds
 	 */
 	public void setNumExecutionSlots(int slots) {
 		m_executionSlots = slots;
@@ -1166,8 +1173,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	/**
 	 * Get the degree of parallelism to use.
 	 * 
-	 * @return the number of tasks to run in parallel when computing the nearest neighbors and evaluating different
-	 *         values of k between the lower and upper bounds
+	 * @return the number of tasks to run in parallel when computing the nearest neighbors and evaluating
+	 *         different values of k between the lower and upper bounds
 	 */
 	public int getNumExecutionSlots() {
 		return m_executionSlots;
@@ -1316,8 +1323,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 		result.add("" + getNumClusters());
 
 		result.add("-A");
-		result.add((m_DistanceFunction.getClass().getName() + " " + Utils.joinOptions(m_DistanceFunction.getOptions()))
-				.trim());
+		result.add((m_DistanceFunction.getClass().getName() + " " + Utils.joinOptions(m_DistanceFunction
+				.getOptions())).trim());
 
 		result.add("-I");
 		result.add("" + getMaxIterations());
@@ -1361,7 +1368,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 				}
 				if (m_ClusterCentroids.attribute(j).isNumeric()) {
 					containsNumeric = true;
-					double width = Math.log(Math.abs(m_ClusterCentroids.instance(i).value(j))) / Math.log(10.0);
+					double width = Math.log(Math.abs(m_ClusterCentroids.instance(i).value(j)))
+							/ Math.log(10.0);
 					// System.err.println(m_ClusterCentroids.instance(i).value(j)+" "+width);
 					if (width < 0) {
 						width = 1;
@@ -1399,7 +1407,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 				if (m_ClusterCentroids.attribute(i).isNominal()) {
 					int maxV = Utils.maxIndex(m_FullNominalCounts[i]);
 					/*
-					 * int percent = (int)((double)m_FullNominalCounts[i][maxV] / Utils.sum(m_ClusterSizes) * 100.0);
+					 * int percent = (int)((double)m_FullNominalCounts[i][maxV] / Utils.sum(m_ClusterSizes) *
+					 * 100.0);
 					 */
 					int percent = 6; // max percent width (100%)
 					String nomV = "" + m_FullNominalCounts[i][maxV];
@@ -1481,10 +1490,12 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 		}
 		temp.append("\n");
 
-		temp.append(pad("", "=",
+		temp.append(pad(
+				"",
+				"=",
 				maxAttWidth
-						+ (maxWidth * (m_ClusterCentroids.numInstances() + 1) + m_ClusterCentroids.numInstances() + 1),
-				true));
+						+ (maxWidth * (m_ClusterCentroids.numInstances() + 1)
+								+ m_ClusterCentroids.numInstances() + 1), true));
 		temp.append("\n");
 
 		for (int i = 0; i < m_ClusterCentroids.numAttributes(); i++) {
@@ -1502,15 +1513,17 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 					valMeanMode = pad("missing", " ", maxWidth + 1 - "missing".length(), true);
 				} else {
 					valMeanMode = pad(
-							(strVal = m_ClusterCentroids.attribute(i).value((int) m_FullMeansOrMediansOrModes[i])),
-							" ", maxWidth + 1 - strVal.length(), true);
+							(strVal = m_ClusterCentroids.attribute(i).value(
+									(int) m_FullMeansOrMediansOrModes[i])), " ",
+							maxWidth + 1 - strVal.length(), true);
 				}
 			} else {
 				if (Double.isNaN(m_FullMeansOrMediansOrModes[i])) {
 					valMeanMode = pad("missing", " ", maxWidth + 1 - "missing".length(), true);
 				} else {
-					valMeanMode = pad((strVal = Utils.doubleToString(m_FullMeansOrMediansOrModes[i], maxWidth, 4)
-							.trim()), " ", maxWidth + 1 - strVal.length(), true);
+					valMeanMode = pad(
+							(strVal = Utils.doubleToString(m_FullMeansOrMediansOrModes[i], maxWidth, 4)
+									.trim()), " ", maxWidth + 1 - strVal.length(), true);
 				}
 			}
 			temp.append(valMeanMode);
@@ -1522,16 +1535,16 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 					} else {
 						valMeanMode = pad(
 								(strVal = m_ClusterCentroids.attribute(i).value(
-										(int) m_ClusterCentroids.instance(j).value(i))), " ",
-								maxWidth + 1 - strVal.length(), true);
+										(int) m_ClusterCentroids.instance(j).value(i))), " ", maxWidth + 1
+										- strVal.length(), true);
 					}
 				} else {
 					if (m_ClusterCentroids.instance(j).isMissing(i)) {
 						valMeanMode = pad("missing", " ", maxWidth + 1 - "missing".length(), true);
 					} else {
 						valMeanMode = pad(
-								(strVal = Utils.doubleToString(m_ClusterCentroids.instance(j).value(i), maxWidth, 4)
-										.trim()), " ", maxWidth + 1 - strVal.length(), true);
+								(strVal = Utils.doubleToString(m_ClusterCentroids.instance(j).value(i),
+										maxWidth, 4).trim()), " ", maxWidth + 1 - strVal.length(), true);
 					}
 				}
 				temp.append(valMeanMode);
@@ -1601,9 +1614,10 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 					if (Double.isNaN(m_FullMeansOrMediansOrModes[i])) {
 						stdDevVal = pad("--", " ", maxAttWidth + maxWidth + 1 - 2, true);
 					} else {
-						stdDevVal = pad((strVal = plusMinus
-								+ Utils.doubleToString(m_FullStdDevs[i], maxWidth, 4).trim()), " ", maxWidth
-								+ maxAttWidth + 1 - strVal.length(), true);
+						stdDevVal = pad(
+								(strVal = plusMinus
+										+ Utils.doubleToString(m_FullStdDevs[i], maxWidth, 4).trim()), " ",
+								maxWidth + maxAttWidth + 1 - strVal.length(), true);
 					}
 					temp.append(stdDevVal);
 
@@ -1614,8 +1628,9 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 						} else {
 							stdDevVal = pad(
 									(strVal = plusMinus
-											+ Utils.doubleToString(m_ClusterStdDevs.instance(j).value(i), maxWidth, 4)
-													.trim()), " ", maxWidth + 1 - strVal.length(), true);
+											+ Utils.doubleToString(m_ClusterStdDevs.instance(j).value(i),
+													maxWidth, 4).trim()), " ",
+									maxWidth + 1 - strVal.length(), true);
 						}
 						temp.append(stdDevVal);
 					}
@@ -1703,7 +1718,8 @@ public class SimpleKMeansWithOutput extends RandomizableClusterer implements Num
 	 */
 	public int[] getAssignments() throws Exception {
 		if (!m_PreserveOrder) {
-			throw new Exception("The assignments are only available when order of instances is preserved (-O)");
+			throw new Exception(
+					"The assignments are only available when order of instances is preserved (-O)");
 		}
 		if (m_Assignments == null) {
 			throw new Exception("No assignments made.");

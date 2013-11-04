@@ -35,6 +35,15 @@ public class ImageVectorizer {
 	private int targetVectorLength;
 
 	/**
+	 * Image will be scaled at this maximum number of pixels before vectorization.
+	 */
+	private int maxImageSizeInPixels = 1024 * 768;
+
+	public void setMaxImageSizeInPixels(int maxImageSizeInPixels) {
+		this.maxImageSizeInPixels = maxImageSizeInPixels;
+	}
+
+	/**
 	 * The maximum allowable number of pending tasks, used to limit the memory usage.
 	 */
 	private final int maxNumPendingTasks;
@@ -56,8 +65,7 @@ public class ImageVectorizer {
 	 *            the number of vectorization threads to use
 	 * @throws Exception
 	 */
-	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids, int projectionLength,
-			String PCAFileName, int numThreads) throws Exception {
+	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids, int projectionLength, String PCAFileName, int numThreads) throws Exception {
 		int featureLength;
 		if (featureType.equals("surf")) {
 			featureLength = FeatureExtractor.SURFLength;
@@ -101,8 +109,8 @@ public class ImageVectorizer {
 	}
 
 	/**
-	 * Submits a new image vectorization task for an image that is stored in the disk and has not yet been read into a
-	 * BufferedImage object.
+	 * Submits a new image vectorization task for an image that is stored in the disk and has not yet been
+	 * read into a BufferedImage object.
 	 * 
 	 * @param imageFolder
 	 *            The folder where the image resides.
@@ -110,14 +118,14 @@ public class ImageVectorizer {
 	 *            The name of the image.
 	 */
 	public void submitImageVectorizationTask(String imageFolder, String imageName) {
-		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName, targetVectorLength);
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName, targetVectorLength, maxImageSizeInPixels);
 		pool.submit(call);
 		numPendingTasks++;
 	}
 
 	/**
-	 * This methods submits an image vectorization task for an image that has already been read into a BufferedImage
-	 * object.
+	 * This methods submits an image vectorization task for an image that has already been read into a
+	 * BufferedImage object.
 	 * 
 	 * @param imageName
 	 *            The name of the image.
@@ -125,7 +133,7 @@ public class ImageVectorizer {
 	 *            The BufferedImage object of the image.
 	 */
 	public void submitImageVectorizationTask(String imageName, BufferedImage im) {
-		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, targetVectorLength);
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, targetVectorLength, maxImageSizeInPixels);
 		pool.submit(call);
 		numPendingTasks++;
 	}

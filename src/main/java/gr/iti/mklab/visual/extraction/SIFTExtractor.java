@@ -17,12 +17,16 @@ import boofcv.struct.image.ImageFloat32;
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public class SIFTExtractor extends FeatureExtractor {
+public class SIFTExtractor extends AbstractFeatureExtractor {
 
 	public SIFTExtractor() {
 	}
 
-	@Override
+	/**
+	 * Detects key points inside the image and computes descriptions at those points. <br>
+	 * TO DO: remove code in comments that is used for earlier versions of BoofCV<br>
+	 * TO DO: and more details about the extraction parameters
+	 */
 	protected double[][] extractFeaturesInternal(BufferedImage image) {
 		ImageFloat32 boofcvImage = ConvertBufferedImage.convertFromSingle(image, null, ImageFloat32.class);
 		ConvertBufferedImage.convertFrom(image, boofcvImage);
@@ -33,7 +37,8 @@ public class SIFTExtractor extends FeatureExtractor {
 		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(4, 1, false, -1);
 		// == v0.14++ version ==
 		ConfigSiftScaleSpace conf = new ConfigSiftScaleSpace();
-		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null, null);
+		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null,
+				null);
 
 		// specify the image to process
 		sift.detect(boofcvImage);

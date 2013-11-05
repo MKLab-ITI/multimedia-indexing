@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public abstract class FeatureExtractor {
+public abstract class AbstractFeatureExtractor {
 
 	public static final int SIFTLength = 128;
 	public static final int SURFLength = 64;

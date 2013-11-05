@@ -16,7 +16,7 @@ import boofcv.struct.image.ImageFloat32;
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */
-public class SURFExtractor extends FeatureExtractor {
+public class SURFExtractor extends AbstractFeatureExtractor {
 	/**
 	 * The maximum features extracted per scale.
 	 */
@@ -36,11 +36,11 @@ public class SURFExtractor extends FeatureExtractor {
 	}
 
 	/**
-	 * Detects key points inside the image and computes descriptions at those points.
-	 * 
-	 * @throws Exception
+	 * Detects key points inside the image and computes descriptions at those points. <br>
+	 * TO DO: remove code in comments that is used for earlier versions of BoofCV<br>
+	 * TO DO: and more details about the extraction parameters
 	 */
-	protected double[][] extractFeaturesInternal(BufferedImage image) throws Exception {
+	protected double[][] extractFeaturesInternal(BufferedImage image) {
 		ImageFloat32 boofcvImage = ConvertBufferedImage.convertFromSingle(image, null, ImageFloat32.class);
 		ConvertBufferedImage.convertFrom(image, boofcvImage);
 

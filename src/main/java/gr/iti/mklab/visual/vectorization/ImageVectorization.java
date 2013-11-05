@@ -2,7 +2,7 @@ package gr.iti.mklab.visual.vectorization;
 
 import gr.iti.mklab.visual.aggregation.VladAggregatorMultipleVocabularies;
 import gr.iti.mklab.visual.dimreduction.PCA;
-import gr.iti.mklab.visual.extraction.FeatureExtractor;
+import gr.iti.mklab.visual.extraction.AbstractFeatureExtractor;
 import gr.iti.mklab.visual.extraction.ImageScaling;
 import gr.iti.mklab.visual.extraction.SURFExtractor;
 import gr.iti.mklab.visual.utilities.ImageIOGreyScale;
@@ -51,7 +51,7 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	/**
 	 * This object is used for descriptor extraction.
 	 */
-	private static FeatureExtractor featureExtractor;
+	private static AbstractFeatureExtractor featureExtractor;
 
 	/**
 	 * This object is used for extracting VLAD vectors with multiple vocabulary aggregation.
@@ -172,7 +172,7 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 * 
 	 * @param extractor
 	 */
-	public static void setFeatureExtractor(FeatureExtractor extractor) {
+	public static void setFeatureExtractor(AbstractFeatureExtractor extractor) {
 		ImageVectorization.featureExtractor = extractor;
 	}
 
@@ -206,13 +206,13 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 		String[] codebookFiles = { "C:/codebook1.csv", "C:/codebook2.csv", "C:/codebook3.csv", "C:/codebook4.csv" };
 		int[] numCentroids = { 64, 64, 64, 64 };
 		String pcaFilename = "C:/pca.txt";
-		int initialLength = numCentroids.length * numCentroids[0] * FeatureExtractor.SURFLength;
+		int initialLength = numCentroids.length * numCentroids[0] * AbstractFeatureExtractor.SURFLength;
 		int targetLength = 128;
 
 		ImageVectorization imvec = new ImageVectorization(imageFolder, imagFilename, targetLength, 512 * 384);
 		ImageVectorization.setFeatureExtractor(new SURFExtractor());
 		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles, numCentroids,
-				FeatureExtractor.SURFLength));
+				AbstractFeatureExtractor.SURFLength));
 		if (targetLength < initialLength) {
 			PCA pca = new PCA(targetLength, 1, initialLength, true);
 			pca.loadPCAFromFile(pcaFilename);

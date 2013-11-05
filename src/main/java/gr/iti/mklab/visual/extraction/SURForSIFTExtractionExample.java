@@ -45,7 +45,7 @@ public class SURForSIFTExtractionExample {
 		boolean binary = Boolean.parseBoolean(args[5]);
 
 		ImageScaling scale = new ImageScaling(maxPixels);
-		FeatureExtractor featureExtractor;
+		AbstractFeatureExtractor featureExtractor;
 		if (featureType.equals("surf")) {
 			featureExtractor = new SURFExtractor();
 		} else if (featureType.equals("sift")) {

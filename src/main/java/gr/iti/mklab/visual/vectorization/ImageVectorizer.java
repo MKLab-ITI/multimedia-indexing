@@ -3,7 +3,7 @@ package gr.iti.mklab.visual.vectorization;
 import gr.iti.mklab.visual.aggregation.AbstractFeatureAggregator;
 import gr.iti.mklab.visual.aggregation.VladAggregatorMultipleVocabularies;
 import gr.iti.mklab.visual.dimreduction.PCA;
-import gr.iti.mklab.visual.extraction.FeatureExtractor;
+import gr.iti.mklab.visual.extraction.AbstractFeatureExtractor;
 import gr.iti.mklab.visual.extraction.SIFTExtractor;
 import gr.iti.mklab.visual.extraction.SURFExtractor;
 
@@ -68,11 +68,11 @@ public class ImageVectorizer {
 	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids, int projectionLength, String PCAFileName, int numThreads) throws Exception {
 		int featureLength;
 		if (featureType.equals("surf")) {
-			featureLength = FeatureExtractor.SURFLength;
+			featureLength = AbstractFeatureExtractor.SURFLength;
 			SURFExtractor surf = new SURFExtractor();
 			ImageVectorization.setFeatureExtractor(surf);
 		} else if (featureType.equals("sift")) {
-			featureLength = FeatureExtractor.SIFTLength;
+			featureLength = AbstractFeatureExtractor.SIFTLength;
 			SIFTExtractor sift = new SIFTExtractor();
 			sift.setPowerNormalization(true); // power+L2 normalize the SIFT descriptors
 			sift.setL2Normalization(true);

@@ -68,4 +68,7 @@ The library supports 3 types of indices: `Linear`, `PQ` and `IVFPQ` which are im
 
 The PQ and IVFPQ index types require a product quantizer file to work. This can be created using the `ProductQuantizationLearning` class of the  `gr.iti.mklab.visual.quantization` package. Besides that file, IVFPQ also requires a coarse quantizer file which can obtained using the `CoarseQuantizerLearning` of the same package.
 
-We try to follow the semantic versioning guidelines specified here: http://www.semver.org/
+  [BoofCV]: http://boofcv.org
+  [this page]: http://www.socialsensor.eu/results/software/79-image-search-testbed
+  [Weka]: http://www.cs.waikato.ac.nz/ml/weka/
+  [EJML]: https://code.google.com/p/efficient-java-matrix-library/

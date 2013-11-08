@@ -32,10 +32,10 @@ public class SampleLocalFeatures {
 	 */
 	public static void main(String[] args) throws IOException {
 
-		String path = args[0]; // "C:/Users/lef/Desktop/ITI/data/Flickr200K/surf_raw_0-10/"
-		int targetNumFeatures = Integer.parseInt(args[1]); // 100000
-		final String extension = args[2]; // .surf
-		int numSamples = Integer.parseInt(args[3]); // 1
+		String path = args[0];
+		int targetNumFeatures = Integer.parseInt(args[1]);
+		final String extension = args[2];
+		int numSamples = Integer.parseInt(args[3]);
 
 		File dir = new File(path);
 		// return only files that have the specified extension

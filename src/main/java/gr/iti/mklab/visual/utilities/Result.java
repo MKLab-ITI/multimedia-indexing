@@ -20,29 +20,29 @@ public class Result implements Comparator<Result> {
 	/**
 	 * The internal id of the returned result.
 	 */
-	private int internalId;
+	private int iid;
 
 	/**
 	 * The external id of the returned result.
 	 */
-	private String externalId;
+	private String id;
 
 	public Result() {
 	}
 
 	public Result(int internalId, double distance) {
-		this.internalId = internalId;
+		this.iid = internalId;
 		this.distance = distance;
 	}
 
-	public Result(String externalId, double distance) {
-		this.externalId = externalId;
+	public Result(String id, double distance) {
+		this.id = id;
 		this.distance = distance;
 	}
 
-	public Result(int internalId, String externalId, double distance) {
-		this.internalId = internalId;
-		this.externalId = externalId;
+	public Result(int internalId, String id, double distance) {
+		this.iid = internalId;
+		this.id = id;
 		this.distance = distance;
 	}
 
@@ -60,19 +60,19 @@ public class Result implements Comparator<Result> {
 	}
 
 	public int getInternalId() {
-		return internalId;
+		return iid;
 	}
 
 	public void setInternalId(int internalId) {
-		this.internalId = internalId;
+		this.iid = internalId;
 	}
 
-	public String getExternalId() {
-		return externalId;
+	public String getId() {
+		return id;
 	}
 
-	public void setExternalId(String externalId) {
-		this.externalId = externalId;
+	public void setId(String externalId) {
+		this.id = externalId;
 	}
 
 }

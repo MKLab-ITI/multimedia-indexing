@@ -16,15 +16,10 @@ import org.ejml.ops.SingularOps;
 
 /**
  * <p>
- * The following class shows how to perform basic principle component analysis in EJML. This class is a
- * modification of the <a
+ * The following class uses EJML to perform basic principle component analysis. This class is a modification
+ * of the <a
  * href="https://code.google.com/p/efficient-java-matrix-library/wiki/PrincipleComponentAnalysisExample"
  * >class</a> written by Peter Abeles.
- * </p>
- * <p>
- * Principal Component Analysis (PCA) is typically used to develop a linear model for a set of data (e.g. face
- * images) which can then be used to test for membership. PCA works by converting the set of data to a new
- * basis that is a subspace of the original set. The subspace is selected to maximize information.
  * </p>
  * <p>
  * PCA is typically derived as an eigenvalue problem. However in this implementation
@@ -56,7 +51,7 @@ public class PCA {
 	/** where the data is stored **/
 	private DenseMatrix64F A = new DenseMatrix64F(1, 1);
 
-	/** mean values of each element across alls samples **/
+	/** mean values of each element across all samples **/
 	private DenseMatrix64F means;
 
 	/** principle component subspace is stored in the rows **/

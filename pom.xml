@@ -1,15 +1,53 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gr.iti.mklab</groupId>
 	<artifactId>multimedia-indexing</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
+	
 	<name>multimedia-indexing</name>
-	<url>http://maven.apache.org</url>
+	<url>https://github.com/socialsensor/multimedia-indexing</url>
+    <description>A framework for large-scale feature extraction, indexing and retrieval.</description>
+    
+   	<parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+    
+    <developers>
+    	<developer>
+       		<id>lefman</id>
+            <name>Eleftherios Spyromitros-Xioufis</name>
+            <email>l3fman@gmail.com</email>
+        </developer>
+        <developer>
+            <id>manosetro</id>
+            <name>Manos Schinas</name>
+            <email>manosetro@iti.gr</email>
+        </developer>
+    </developers>
+    
+ 	<licenses>
+    	<license>
+      		<name>The Apache Software License, Version 2.0</name>
+      		<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      		<distribution>repo</distribution>
+    	</license>
+  	</licenses>
+  
+ 	<scm>
+        <connection>scm:git:git@github.com:socialsensor/multimedia-indexing.git</connection>
+        <developerConnection>scm:git:git@github.com:socialsensor/multimedia-indexing.git</developerConnection>
+   		<url>git@github.com:socialsensor/multimedia-indexing.git</url>
+  	</scm>
 
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    
 	<dependencies>
 		<dependency>
 			<groupId>commons-cli</groupId>
@@ -65,21 +103,6 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-
-			</plugin>
-		</plugins>
-	</build>
-
 	<repositories>
 		<repository>
 			<id>oracleReleases</id>
@@ -95,4 +118,44 @@
 			<url>http://clojars.org/repo</url>
 		</repository>
 	</repositories>
+
+    <pluginRepositories />
+                
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

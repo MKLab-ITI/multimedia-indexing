@@ -9,7 +9,7 @@ import java.util.ArrayList;
  * This class computes multiple vocabulary VLAD vectors as described in: <br>
  * 
  * <pre>
- * H. Jegou and O. Chum, “Negative evidences and co-occurences in image retrieval: The benefit of pca and whitening,” in ECCV, 2012
+ * H. Jegou and O. Chum, Negative evidences and co-occurences in image retrieval: The benefit of pca and whitening, in ECCV, 2012
  * </pre>
  * 
  * VLAD vectors are generated independently from each vocabulary using power+L2 normalization and then

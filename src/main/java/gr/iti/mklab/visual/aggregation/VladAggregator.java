@@ -6,8 +6,8 @@ import java.util.ArrayList;
  * This class computes raw (unnormalized) VLAD vectors as described in:
  * 
  * <pre>
- * H. Jegou, F. Perronnin, M. Douze, J. Sanchez, P. Perez, and C. Schmid, “Aggregating local image descriptors into compact codes,” 
- * IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 34, no. 9, pp. 1704–1716, 2012.
+ * H. Jegou, F. Perronnin, M. Douze, J. Sanchez, P. Perez, and C. Schmid, Aggregating local image descriptors into compact codes, 
+ * IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 34, no. 9, pp. 17041716, 2012.
  * </pre>
  * 
  * The produced vectors should be power and L2 normalized afterwards.

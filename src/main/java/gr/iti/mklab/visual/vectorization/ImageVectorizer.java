@@ -53,6 +53,8 @@ public class ImageVectorizer {
 	 * 
 	 * @param featureType
 	 *            the features to be extracted (surf or sift)
+	 * @param featureNormType
+	 *            the type of feature normalization to be applied (no/power+l2)
 	 * @param codebooksFiles
 	 *            a String array with full paths to the codebook files
 	 * @param numCentroids
@@ -65,27 +67,43 @@ public class ImageVectorizer {
 	 *            the number of vectorization threads to use
 	 * @throws Exception
 	 */
-	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids, int projectionLength, String PCAFileName, int numThreads) throws Exception {
+	public ImageVectorizer(String featureType, String featureNormType, String[] codebookFiles,
+			int[] numCentroids, int projectionLength, String PCAFileName, int numThreads) throws Exception {
 		int featureLength;
+
+		AbstractFeatureExtractor fe = null;
 		if (featureType.equals("surf")) {
 			featureLength = AbstractFeatureExtractor.SURFLength;
-			SURFExtractor surf = new SURFExtractor();
-			ImageVectorization.setFeatureExtractor(surf);
+			fe = new SURFExtractor();
 		} else if (featureType.equals("sift")) {
 			featureLength = AbstractFeatureExtractor.SIFTLength;
-			SIFTExtractor sift = new SIFTExtractor();
-			sift.setPowerNormalization(true); // power+L2 normalize the SIFT descriptors
-			sift.setL2Normalization(true);
-			ImageVectorization.setFeatureExtractor(sift);
+			fe = new SIFTExtractor();
 		} else {
 			throw new Exception("Wrong feature type;");
 		}
+
+		boolean l2Normalization = false;
+		boolean powerNormalization = false;
+		if (featureNormType.equals("no")) {
+			// do nothing
+		} else if (featureNormType.equals("power+l2")) {
+			l2Normalization = true;
+			powerNormalization = true;
+		} else {
+			throw new Exception("Wrong feature normalization type!");
+		}
+
+		fe.setL2Normalization(l2Normalization);
+		fe.setPowerNormalization(powerNormalization);
+		ImageVectorization.setFeatureExtractor(fe);
+
 		int numCodebooks = codebookFiles.length;
 		// initialize the VLAD object
 		double[][][] codebooks = new double[numCodebooks][][];
 		int initialVectorLength = 0;
 		for (int i = 0; i < numCodebooks; i++) {
-			codebooks[i] = AbstractFeatureAggregator.readQuantizer(codebookFiles[i], numCentroids[i], featureLength);
+			codebooks[i] = AbstractFeatureAggregator.readQuantizer(codebookFiles[i], numCentroids[i],
+					featureLength);
 			initialVectorLength += codebooks[i].length * featureLength;
 		}
 		targetVectorLength = projectionLength;
@@ -118,7 +136,8 @@ public class ImageVectorizer {
 	 *            The name of the image.
 	 */
 	public void submitImageVectorizationTask(String imageFolder, String imageName) {
-		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName, targetVectorLength, maxImageSizeInPixels);
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageFolder, imageName,
+				targetVectorLength, maxImageSizeInPixels);
 		pool.submit(call);
 		numPendingTasks++;
 	}
@@ -133,7 +152,8 @@ public class ImageVectorizer {
 	 *            The BufferedImage object of the image.
 	 */
 	public void submitImageVectorizationTask(String imageName, BufferedImage im) {
-		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, targetVectorLength, maxImageSizeInPixels);
+		Callable<ImageVectorizationResult> call = new ImageVectorization(imageName, im, targetVectorLength,
+				maxImageSizeInPixels);
 		pool.submit(call);
 		numPendingTasks++;
 	}

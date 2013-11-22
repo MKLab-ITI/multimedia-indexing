@@ -92,7 +92,7 @@ public class UrlIndexingMT {
 		downloader.setSaveOriginal(saveOriginal);
 		downloader.setSaveThumb(false);
 		downloader.setFollowRedirects(followRedirects);
-		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids,
+		ImageVectorizer vectorizer = new ImageVectorizer("surf", "power+l2", codebookFiles, numCentroids,
 				projectionLength, pcaFile, numVectorizationThreads);
 		// The folder where the plain index is stored.
 		// String BDBEnvHome = indexFolder + "BDB_" + projectionLength + "_plain_" +

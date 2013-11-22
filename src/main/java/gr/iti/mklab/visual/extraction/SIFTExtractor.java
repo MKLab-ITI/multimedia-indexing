@@ -4,40 +4,53 @@ import gr.iti.mklab.visual.utilities.Normalization;
 
 import java.awt.image.BufferedImage;
 
-import boofcv.abst.feature.describe.ConfigSiftScaleSpace;
 import boofcv.abst.feature.detdesc.DetectDescribePoint;
+import boofcv.abst.feature.detect.interest.ConfigSiftDetector;
 import boofcv.core.image.ConvertBufferedImage;
 import boofcv.factory.feature.detdesc.FactoryDetectDescribe;
 import boofcv.struct.feature.SurfFeature;
 import boofcv.struct.image.ImageFloat32;
 
 /**
- * This class used the BoofCV library for extracting SIFT features.
+ * This class uses the BoofCV library for extracting SIFT features.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
 public class SIFTExtractor extends AbstractFeatureExtractor {
 
+	/**
+	 * Sets the value of {@link boofcv.abst.feature.detect.interest.ConfigSiftDetector#maxFeaturesPerScale}
+	 */
+	private int maxFeaturesPerScale;
+
+	/**
+	 * Sets the value of {@link boofcv.abst.feature.detect.interest.ConfigSiftDetector#detectThreshold}
+	 */
+	private float detectThreshold;
+
+	/**
+	 * Constructor using default "good" settings for the detector.
+	 * 
+	 * @throws Exception
+	 */
 	public SIFTExtractor() {
+		this(-1, 1);
+	}
+
+	public SIFTExtractor(int maxFeaturesPerScale, float detectThreshold) {
+		this.maxFeaturesPerScale = maxFeaturesPerScale;
+		this.detectThreshold = detectThreshold;
 	}
 
 	/**
-	 * Detects key points inside the image and computes descriptions at those points. <br>
-	 * TO DO: remove code in comments that is used for earlier versions of BoofCV<br>
-	 * TO DO: and more details about the extraction parameters
+	 * Detects key points inside the image and computes descriptions at those points.
 	 */
 	protected double[][] extractFeaturesInternal(BufferedImage image) {
 		ImageFloat32 boofcvImage = ConvertBufferedImage.convertFromSingle(image, null, ImageFloat32.class);
-		ConvertBufferedImage.convertFrom(image, boofcvImage);
-		// == journal version ==
-		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribeNormalization.sift(4, 1,
-		// doubleInputImaged, -1);
-		// == v0.12 version ==
-		// DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(4, 1, false, -1);
-		// == v0.14++ version ==
-		ConfigSiftScaleSpace conf = new ConfigSiftScaleSpace();
-		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(conf, null, null,
+		// create the SIFT detector and descriptor in BoofCV v0.15
+		ConfigSiftDetector conf = new ConfigSiftDetector(2, detectThreshold, maxFeaturesPerScale, 5);
+		DetectDescribePoint<ImageFloat32, SurfFeature> sift = FactoryDetectDescribe.sift(null, conf, null,
 				null);
 
 		// specify the image to process

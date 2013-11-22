@@ -73,7 +73,8 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	}
 
 	/**
-	 * This constructor is used when the image should be read into a BufferedImage object from the given folder.
+	 * This constructor is used when the image should be read into a BufferedImage object from the given
+	 * folder.
 	 * 
 	 * @param imageFolder
 	 *            The folder (full path) where the image resides
@@ -82,10 +83,11 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 * @param vectorLength
 	 *            The target length of the vector
 	 * @param maxImageSizeInPixels
-	 *            The maximum image size of in pixels. It the image is larger, it is first scaled down prior to
-	 *            vectorization.
+	 *            The maximum image size of in pixels. It the image is larger, it is first scaled down prior
+	 *            to vectorization.
 	 */
-	public ImageVectorization(String imageFolder, String imageFilename, int vectorLength, int maxImageSizeInPixels) {
+	public ImageVectorization(String imageFolder, String imageFilename, int vectorLength,
+			int maxImageSizeInPixels) {
 		this.imageFolder = imageFolder;
 		this.imageFilename = imageFilename;
 		this.vectorLength = vectorLength;
@@ -102,10 +104,11 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 * @param vectorLength
 	 *            The target length of the vector
 	 * @param maxImageSizeInPixels
-	 *            The maximum image size of in pixels. It the image is larger, it is first scaled down prior to
-	 *            vectorization.
+	 *            The maximum image size of in pixels. It the image is larger, it is first scaled down prior
+	 *            to vectorization.
 	 */
-	public ImageVectorization(String imageFilename, BufferedImage image, int vectorLength, int maxImageSizeInPixels) {
+	public ImageVectorization(String imageFilename, BufferedImage image, int vectorLength,
+			int maxImageSizeInPixels) {
 		this.imageFilename = imageFilename;
 		this.vectorLength = vectorLength;
 		this.image = image;
@@ -203,7 +206,8 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	public static void main(String args[]) throws Exception {
 		String imageFolder = "C:/images/";
 		String imagFilename = "test.jpg";
-		String[] codebookFiles = { "C:/codebook1.csv", "C:/codebook2.csv", "C:/codebook3.csv", "C:/codebook4.csv" };
+		String[] codebookFiles = { "C:/codebook1.csv", "C:/codebook2.csv", "C:/codebook3.csv",
+				"C:/codebook4.csv" };
 		int[] numCentroids = { 64, 64, 64, 64 };
 		String pcaFilename = "C:/pca.txt";
 		int initialLength = numCentroids.length * numCentroids[0] * AbstractFeatureExtractor.SURFLength;
@@ -211,8 +215,8 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 
 		ImageVectorization imvec = new ImageVectorization(imageFolder, imagFilename, targetLength, 512 * 384);
 		ImageVectorization.setFeatureExtractor(new SURFExtractor());
-		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles, numCentroids,
-				AbstractFeatureExtractor.SURFLength));
+		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles,
+				numCentroids, AbstractFeatureExtractor.SURFLength));
 		if (targetLength < initialLength) {
 			PCA pca = new PCA(targetLength, 1, initialLength, true);
 			pca.loadPCAFromFile(pcaFilename);

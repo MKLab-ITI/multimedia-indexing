@@ -37,7 +37,10 @@ public class FolderIndexingMT {
 	 *            [6] image will be scaled at this maximum number of pixels before vectorization
 	 * @param args
 	 *            [7] number of processor threads to be used for vectorization (compute-intensive task)
-	 * 
+	 * @param args
+	 *            [8] type of features to be extracted (surf or sift)
+	 * @param args
+	 *            [9] type of normalization tp be applied on the features (no or power+l2)
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
@@ -57,10 +60,12 @@ public class FolderIndexingMT {
 		// http://codeidol.com/java/java-concurrency/Applying-Thread-Pools/Sizing-Thread-Pools/
 		// int numVectorizationThreads = Runtime.getRuntime().availableProcessors() + 1;
 		int numVectorizationThreads = Integer.parseInt(args[7]);
+		String featureType = args[8];
+		String featureNormType = args[9];
 
 		// Initialize the vectorizer and the indexer
-		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids,
-				projectionLength, pcaFile, numVectorizationThreads);
+		ImageVectorizer vectorizer = new ImageVectorizer(featureType, featureNormType, codebookFiles,
+				numCentroids, projectionLength, pcaFile, numVectorizationThreads);
 		vectorizer.setMaxImageSizeInPixels(maxImageSizeInPixels);
 		String BDBEnvHome = indexFolder + "BDB_" + projectionLength;
 		AbstractSearchStructure index = new Linear(projectionLength, maxIndexSize, false, BDBEnvHome, false,
@@ -111,6 +116,7 @@ public class FolderIndexingMT {
 				e.printStackTrace();
 				System.out.println(e.toString());
 				System.out.println("" + new Date() + ": " + failedCounter + " vectors failed");
+				System.out.println("Image: " + imvr.getImageName());
 			}
 			if (imvr != null) {
 				String name = imvr.getImageName();

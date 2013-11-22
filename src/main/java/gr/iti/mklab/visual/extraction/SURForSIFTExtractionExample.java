@@ -48,6 +48,8 @@ public class SURForSIFTExtractionExample {
 		AbstractFeatureExtractor featureExtractor;
 		if (featureType.equals("surf")) {
 			featureExtractor = new SURFExtractor();
+		} else if (featureType.equals("colorsurf")) {
+			featureExtractor = new ColorSURFExtractor();
 		} else if (featureType.equals("sift")) {
 			featureExtractor = new SIFTExtractor();
 		} else {
@@ -70,7 +72,8 @@ public class SURForSIFTExtractionExample {
 		String[] files = dir.list(filter);
 
 		// create a folder for writing the features
-		File file = new File(imageFolder + "/" + featureType);
+		String featuresFolder = imageFolder + "/" + featureType;
+		File file = new File(featuresFolder);
 		if (!file.exists()) {
 			if (file.mkdir()) {
 				System.out.println("Directory is created!");
@@ -111,6 +114,12 @@ public class SURForSIFTExtractionExample {
 			totalScalingTime += System.currentTimeMillis() - startScaling;
 
 			double[][] features = featureExtractor.extractFeatures(image);
+			// sanity check
+			for (int k = 0; k < features.length; k++) {
+				if (String.valueOf(features[k][0]).equals("NaN")) {
+					System.out.println("NaN feature " + (k + 1) + " in image " + files[i]);
+				}
+			}
 
 			String imageFileExtension;
 			if (files[i].endsWith("jpg")) {
@@ -120,11 +129,11 @@ public class SURForSIFTExtractionExample {
 			}
 			// write features to file
 			if (binary) {
-				String featuresFileName = imageFolder + "/" + featureType + "/"
+				String featuresFileName = featuresFolder + "/"
 						+ files[i].split("\\." + imageFileExtension)[0] + "." + featureType + "b";
 				FeatureIO.writeBinary(featuresFileName, features);
 			} else {
-				String featuresFileName = imageFolder + "/" + featureType + "/"
+				String featuresFileName = featuresFolder + "/"
 						+ files[i].split("\\." + imageFileExtension)[0] + "." + featureType;
 				FeatureIO.writeText(featuresFileName, features);
 			}

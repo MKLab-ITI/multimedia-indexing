@@ -12,52 +12,45 @@ import boofcv.struct.feature.SurfFeature;
 import boofcv.struct.image.ImageFloat32;
 
 /**
- * This class implements SURF feature extraction using the BoofCV library.
+ * This class uses the BoofCV library for extracting SURF features.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */
 public class SURFExtractor extends AbstractFeatureExtractor {
 	/**
-	 * The maximum features extracted per scale.
+	 * Sets the value of {@link boofcv.abst.feature.detect.interest.ConfigFastHessian#maxFeaturesPerScale}
 	 */
 	private int maxFeaturesPerScale;
 	/**
-	 * The minimum intensity threshold.
+	 * Sets the value of {@link boofcv.abst.feature.detect.interest.ConfigFastHessian#detectThreshold}
 	 */
-	private int minFeatureIntensity;
+	private int detectThreshold;
 
+	/**
+	 * Constructor using default "good" settings for the detector.
+	 * 
+	 * @throws Exception
+	 */
 	public SURFExtractor() throws Exception {
 		this(-1, 1);
 	}
 
 	public SURFExtractor(int maxFeaturesPerScale, int minFeatureIntensity) throws Exception {
 		this.maxFeaturesPerScale = maxFeaturesPerScale;
-		this.minFeatureIntensity = minFeatureIntensity;
+		this.detectThreshold = minFeatureIntensity;
 	}
 
 	/**
-	 * Detects key points inside the image and computes descriptions at those points. <br>
-	 * TO DO: remove code in comments that is used for earlier versions of BoofCV<br>
-	 * TO DO: and more details about the extraction parameters
+	 * Detects key points inside the image and computes descriptions at those points.
 	 */
 	protected double[][] extractFeaturesInternal(BufferedImage image) {
 		ImageFloat32 boofcvImage = ConvertBufferedImage.convertFromSingle(image, null, ImageFloat32.class);
-		ConvertBufferedImage.convertFrom(image, boofcvImage);
 
-		// create the detector and descriptor
-		// == journal version ==
-		// DetectDescribePoint<ImageFloat32, SurfFeature> surf =
-		// FactoryDetectDescribeNormalization.surf(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4, 4,
-		// modified, ImageFloat32.class);
-		// == v0.12 version ==
-		// DetectDescribePoint<ImageFloat32, SurfFeature> surf =
-		// FactoryDetectDescribe.surf(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4, 4,
-		// modified, ImageFloat32.class);
-		// == v0.14 version or later ==
-		ConfigFastHessian conf = new ConfigFastHessian(minFeatureIntensity, 2, maxFeaturesPerScale, 2, 9, 4,
-				4);
+		// create the SURF detector and descriptor in BoofCV v0.15
+		ConfigFastHessian conf = new ConfigFastHessian(detectThreshold, 2, maxFeaturesPerScale, 2, 9, 4, 4);
 		DetectDescribePoint<ImageFloat32, SurfFeature> surf = FactoryDetectDescribe.surfStable(conf, null,
 				null, ImageFloat32.class);
+
 		// specify the image to process
 		surf.detect(boofcvImage);
 		int numPoints = surf.getNumberOfFeatures();

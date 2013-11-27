@@ -48,8 +48,6 @@ public class SURForSIFTExtractionExample {
 		AbstractFeatureExtractor featureExtractor;
 		if (featureType.equals("surf")) {
 			featureExtractor = new SURFExtractor();
-		} else if (featureType.equals("colorsurf")) {
-			featureExtractor = new ColorSURFExtractor();
 		} else if (featureType.equals("sift")) {
 			featureExtractor = new SIFTExtractor();
 		} else {

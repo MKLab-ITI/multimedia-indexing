@@ -204,27 +204,56 @@ public class ImageVectorization implements Callable<ImageVectorizationResult> {
 	 * @throws Exception
 	 */
 	public static void main(String args[]) throws Exception {
-		String imageFolder = "C:/images/";
-		String imagFilename = "test.jpg";
-		String[] codebookFiles = { "C:/codebook1.csv", "C:/codebook2.csv", "C:/codebook3.csv",
-				"C:/codebook4.csv" };
-		int[] numCentroids = { 64, 64, 64, 64 };
-		String pcaFilename = "C:/pca.txt";
+		
+		String learningFiles = "/home/manosetro/git/multimedia-indexing/learning_files/";
+		
+		File imageFolder = new File("/disk1_data/Photos/AkisGenethlia");
+		
+		String[] codebookFiles = { 
+				learningFiles + "surf_l2_128c_0.csv", 
+				learningFiles + "surf_l2_128c_1.csv", 
+				learningFiles + "surf_l2_128c_2.csv",
+				learningFiles + "surf_l2_128c_3.csv" };
+		
+		int[] numCentroids = { 128, 128, 128, 128 };
+		
+		String pcaFilename = learningFiles + "pca_surf_4x128_32768to1024.txt";
 		int initialLength = numCentroids.length * numCentroids[0] * AbstractFeatureExtractor.SURFLength;
-		int targetLength = 128;
-
-		ImageVectorization imvec = new ImageVectorization(imageFolder, imagFilename, targetLength, 512 * 384);
-		ImageVectorization.setFeatureExtractor(new SURFExtractor());
-		ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles,
-				numCentroids, AbstractFeatureExtractor.SURFLength));
+		int targetLength = 1024;
+		
+		System.out.println("Initial length : " + numCentroids.length +"x" + 
+				numCentroids[0] + "x" + AbstractFeatureExtractor.SURFLength + "=" + initialLength);
+		
 		if (targetLength < initialLength) {
 			PCA pca = new PCA(targetLength, 1, initialLength, true);
 			pca.loadPCAFromFile(pcaFilename);
 			ImageVectorization.setPcaProjector(pca);
+			System.out.println("PCA loaded! ");
 		}
-		imvec.setDebug(true);
-
-		ImageVectorizationResult imvr = imvec.call();
-		System.out.println(imvr.getImageName() + ": " + Arrays.toString(imvr.getImageVector()));
+		
+		
+		
+				
+		long t = System.currentTimeMillis();
+		for(String imagFilename : imageFolder.list()) {
+			
+			ImageVectorization imvec = new ImageVectorization(imageFolder.toString()+"/", imagFilename, targetLength, 512 * 384);
+			ImageVectorization.setFeatureExtractor(new SURFExtractor());
+			ImageVectorization.setVladAggregator(new VladAggregatorMultipleVocabularies(codebookFiles,
+					numCentroids, AbstractFeatureExtractor.SURFLength));
+			
+			imvec.setDebug(false);
+			
+			ImageVectorizationResult imvr = imvec.call();
+			double[] vector = imvr.getImageVector();
+			String vectorStr = Arrays.toString(vector);
+			
+			System.out.println(imvr.getImageName() + " : " + vector.length);
+			
+		}
+		
+		t = System.currentTimeMillis() - t;
+		System.out.println(t + " msecs to extract features from " + imageFolder.list().length + " images");
+			
 	}
 }

@@ -575,7 +575,7 @@ public abstract class AbstractSearchStructure {
 		// create the BDBEnvHome directory if it does not exist
 		File BDBEnvHomeDir = new File(BDBEnvHome);
 		if (!BDBEnvHomeDir.isDirectory()) {
-			boolean success = BDBEnvHomeDir.mkdir();
+			boolean success = BDBEnvHomeDir.mkdirs();
 			if (success) {
 				System.out.println(BDBEnvHome + " directory created.");
 			}

@@ -66,6 +66,8 @@ public class PCA {
 	/** whether to compute the SVD in compact form, false by default **/
 	private boolean compact = false;
 
+	private boolean isPcaInitialized = false;
+
 	/**
 	 * Constructor. Whitening is not applied.
 	 * 
@@ -171,12 +173,6 @@ public class PCA {
 		// strip off unneeded components and find the basis
 		V_t.reshape(numComponents, sampleSize, true);
 
-		// if whitening is true then whiten the PCA matrix V_t by multiplying it with W
-		if (doWhitening) {
-			DenseMatrix64F V_t_w = new DenseMatrix64F(numComponents, sampleSize);
-			CommonOps.mult(W, V_t, V_t_w);
-			V_t = V_t_w;
-		}
 	}
 
 	/**
@@ -186,8 +182,13 @@ public class PCA {
 	 * @param sampleData
 	 *            Sample space vector
 	 * @return Eigen space projected vector
+	 * @throws Exception
 	 */
-	public double[] sampleToEigenSpace(double[] sampleData) {
+	public double[] sampleToEigenSpace(double[] sampleData) throws Exception {
+		if (!isPcaInitialized) {
+			// initiallize PCA correctly!
+			throw new Exception("PCA is not correctly initiallized!");
+		}
 		if (sampleData.length != sampleSize) {
 			throw new IllegalArgumentException("Unexpected vector length!");
 		}
@@ -215,6 +216,9 @@ public class PCA {
 	 * @throws Exception
 	 */
 	public void savePCAToFile(String PCAFileName) throws Exception {
+		if (isPcaInitialized) {
+			throw new Exception("Cannot save, PCA is initialized!");
+		}
 		if (V_t == null) {
 			throw new Exception("Cannot save to file, PCA matrix is null!");
 		}
@@ -304,6 +308,8 @@ public class PCA {
 		}
 
 		in.close();
+
+		isPcaInitialized = true;
 	}
 
 	public void setCompact(boolean compact) {

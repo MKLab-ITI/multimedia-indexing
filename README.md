@@ -1,6 +1,6 @@
 # multimedia-indexing
 
-A framework for large-scale feature extraction, indexing and retrieval.
+A framework for large-scale feature extraction, indexing and retrieval. A preliminary version of this framework was used to conduct the experimental study by [Spyromitros-Xioufis et al. (2012)](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6226771 "Spyromitros-Xioufis et al., 2012"). In case you use this implementation in your research, please cite the [respective paper]((http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6226771 "Spyromitros-Xioufis et al., 2012").
 
 ## Getting Started
 

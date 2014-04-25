@@ -10,38 +10,40 @@ import java.io.FilenameFilter;
 import java.util.Date;
 
 /**
- * This class demonstrates multi-threaded VLAD+SURF vectorization and @{link Linear} indexing of the images in
- * a given folder.
+ * This class demonstrates multi-threaded VLAD vectorization and @{link Linear} indexing of the images in a
+ * given folder.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
 public class FolderIndexingMT {
 
+	/** A maximum size for the index */
 	public static final int maxIndexSize = 10000000;
 
 	/**
 	 * @param args
-	 *            [0] folder that contains the image files
+	 *            [0] directory that contains the image files
 	 * @param args
-	 *            [1] directory where the BDB index will be created
+	 *            [1] directory where the index will be created
 	 * @param args
 	 *            [2] a comma separated list with full paths to the codebook files (also works for 1 codebook)
 	 * @param args
 	 *            [3] a comma separated list with the sizes of the codebooks
 	 * @param args
-	 *            [4] path to the file containing the pca projection matrix
+	 *            [4] path to the file containing the pca projection matrix (an empty String can be given if
+	 *            no projection is needed)
 	 * @param args
-	 *            [5] projection length
+	 *            [5] projection length (if projection length >= initial length, no projection will be
+	 *            performed)
 	 * @param args
-	 *            [6] image will be scaled at this maximum number of pixels before vectorization
+	 *            [6] images will be scaled at this maximum number of pixels before vectorization
 	 * @param args
 	 *            [7] number of processor threads to be used for vectorization (compute-intensive task)
 	 * @param args
-	 *            [8] type of features to be extracted (surf or sift)
+	 *            [8] type of features to be extracted (surf/sift/rootsift/csurf)
 	 * @param args
-	 *            [9] type of normalization tp be applied on the features (no or power+l2)
-	 * @throws Exception
+	 *            [9] whether whitening should be applied along with PCA projection (true/false)
 	 */
 	public static void main(String[] args) throws Exception {
 
@@ -61,13 +63,21 @@ public class FolderIndexingMT {
 		// int numVectorizationThreads = Runtime.getRuntime().availableProcessors() + 1;
 		int numVectorizationThreads = Integer.parseInt(args[7]);
 		String featureType = args[8];
-		String featureNormType = args[9];
+		boolean whitening = Boolean.parseBoolean(args[9]);
 
 		// Initialize the vectorizer and the indexer
-		ImageVectorizer vectorizer = new ImageVectorizer(featureType, featureNormType, codebookFiles,
-				numCentroids, projectionLength, pcaFile, numVectorizationThreads);
+		ImageVectorizer vectorizer = new ImageVectorizer(featureType, codebookFiles, numCentroids,
+				projectionLength, pcaFile, whitening, numVectorizationThreads);
 		vectorizer.setMaxImageSizeInPixels(maxImageSizeInPixels);
-		String BDBEnvHome = indexFolder + "BDB_" + projectionLength;
+		String BDBEnvHome = indexFolder + "BDB_" + maxImageSizeInPixels + "_" + featureType + "_"
+				+ vectorizer.getInitialVectorLength();
+		if (projectionLength < vectorizer.getInitialVectorLength()) {
+			BDBEnvHome += "to" + projectionLength;
+		}
+		if (whitening) {
+			BDBEnvHome += "w";
+		}
+
 		AbstractSearchStructure index = new Linear(projectionLength, maxIndexSize, false, BDBEnvHome, false,
 				true, 0);
 
@@ -79,7 +89,7 @@ public class FolderIndexingMT {
 						|| name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".gif"))
 					return true;
 				else
-					return false;
+					return true;
 			}
 		};
 		String[] files = dir.list(filter);
@@ -109,24 +119,39 @@ public class FolderIndexingMT {
 
 			// try to get an image vectorization result and to index the vector
 			ImageVectorizationResult imvr = null;
-			try {
-				imvr = vectorizer.getImageVectorizationResult();
-			} catch (Exception e) {
-				failedCounter++;
-				e.printStackTrace();
-				System.out.println(e.toString());
-				System.out.println("" + new Date() + ": " + failedCounter + " vectors failed");
-				System.out.println("Image: " + imvr.getImageName());
-			}
+			// try {
+			imvr = vectorizer.getImageVectorizationResult();
+			// } catch (Exception e) {
+			// // this code will probably be never executed because getImageVectorizationResult() does not
+			// // throw Exceptions anymore!
+			// failedCounter++;
+			// e.printStackTrace();
+			// System.out.println(e.toString());
+			// System.out.println("" + new Date() + ": " + failedCounter + " vectors failed");
+			// System.out.println("Image: " + imvr.getImageName());
+			// }
+
 			if (imvr != null) {
 				String name = imvr.getImageName();
-				double[] vector = imvr.getImageVector();
-				if (index.indexVector(name, vector)) {
-					completedCounter++;
+				name = name.split("\\.")[0] + ".jpg";
+				if (imvr.getExceptionMessage() == null) {
+					// vectorization completed with success!s
+					double[] vector = imvr.getImageVector();
+					if (index.indexVector(name, vector)) {
+						completedCounter++;
+					} else {
+						failedCounter++;
+					}
+					System.out.println("" + new Date() + ": " + completedCounter + " vectors indexed");
 				} else {
+					// something bad happened during vectorization
+					System.out.println("Something bad happened when vectorizing image: " + name);
+					System.out.println("Exception message: " + imvr.getExceptionMessage());
 					failedCounter++;
+					System.out.println("" + new Date() + ": " + failedCounter + " vectors failed");
+
 				}
-				System.out.println("" + new Date() + ": " + completedCounter + " vectors indexed");
+
 			}
 
 			// check loop termination condition

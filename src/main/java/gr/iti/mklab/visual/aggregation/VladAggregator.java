@@ -3,14 +3,13 @@ package gr.iti.mklab.visual.aggregation;
 import java.util.ArrayList;
 
 /**
- * This class computes raw (unnormalized) VLAD vectors as described in:
+ * This class computes raw (unnormalized) VLAD vectors as described in:<br>
  * 
- * <pre>
- * H. Jegou, F. Perronnin, M. Douze, J. Sanchez, P. Perez, and C. Schmid, Aggregating local image descriptors into compact codes, 
- * IEEE Transactions on Pattern Analysis and Machine Intelligence, vol. 34, no. 9, pp. 17041716, 2012.
- * </pre>
+ * <em>H. Jegou, F. Perronnin, M. Douze, J. Sanchez, P. Perez, and C. Schmid, Aggregating local image descriptors into compact codes, 
+ * IEEE Transactions on Pattern Analysis and Machine Intelligence, 2012.</em><br>
+ * <br>
  * 
- * The produced vectors should be power and L2 normalized afterwards.
+ * The produced vectors should be power+L2 normalized afterwards.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  */

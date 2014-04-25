@@ -4,6 +4,8 @@ import gr.iti.mklab.visual.aggregation.AbstractFeatureAggregator;
 import gr.iti.mklab.visual.aggregation.VladAggregatorMultipleVocabularies;
 import gr.iti.mklab.visual.dimreduction.PCA;
 import gr.iti.mklab.visual.extraction.AbstractFeatureExtractor;
+import gr.iti.mklab.visual.extraction.ColorSURFExtractor;
+import gr.iti.mklab.visual.extraction.RootSIFTExtractor;
 import gr.iti.mklab.visual.extraction.SIFTExtractor;
 import gr.iti.mklab.visual.extraction.SURFExtractor;
 
@@ -34,6 +36,13 @@ public class ImageVectorizer {
 	/** The target length of the extracted vector. **/
 	private int targetVectorLength;
 
+	/** The initial length of the vector. **/
+	private int initialVectorLength;
+
+	public int getInitialVectorLength() {
+		return initialVectorLength;
+	}
+
 	/**
 	 * Image will be scaled at this maximum number of pixels before vectorization.
 	 */
@@ -52,9 +61,7 @@ public class ImageVectorizer {
 	 * Constructor of the multi-threaded vectorization class.
 	 * 
 	 * @param featureType
-	 *            the features to be extracted (surf or sift)
-	 * @param featureNormType
-	 *            the type of feature normalization to be applied (no/power+l2)
+	 *            the features to be extracted (surf/sift/rootsift/csurf)
 	 * @param codebooksFiles
 	 *            a String array with full paths to the codebook files
 	 * @param numCentroids
@@ -63,12 +70,14 @@ public class ImageVectorizer {
 	 *            the length at which the vectors are projected
 	 * @param PCAFileName
 	 *            the file containing the PCA projection matrix
+	 * @param whitening
+	 *            whether whitening should be applied jointly with PCA projection
 	 * @param numThreads
 	 *            the number of vectorization threads to use
 	 * @throws Exception
 	 */
-	public ImageVectorizer(String featureType, String featureNormType, String[] codebookFiles,
-			int[] numCentroids, int projectionLength, String PCAFileName, int numThreads) throws Exception {
+	public ImageVectorizer(String featureType, String[] codebookFiles, int[] numCentroids,
+			int projectionLength, String PCAFileName, boolean whitening, int numThreads) throws Exception {
 		int featureLength;
 
 		AbstractFeatureExtractor fe = null;
@@ -78,29 +87,20 @@ public class ImageVectorizer {
 		} else if (featureType.equals("sift")) {
 			featureLength = AbstractFeatureExtractor.SIFTLength;
 			fe = new SIFTExtractor();
+		} else if (featureType.equals("rootsift")) {
+			featureLength = AbstractFeatureExtractor.SIFTLength;
+			fe = new RootSIFTExtractor();
+		} else if (featureType.equals("csurf")) {
+			featureLength = 3 * AbstractFeatureExtractor.SURFLength;
+			fe = new ColorSURFExtractor();
 		} else {
 			throw new Exception("Wrong feature type;");
 		}
-
-		boolean l2Normalization = false;
-		boolean powerNormalization = false;
-		if (featureNormType.equals("no")) {
-			// do nothing
-		} else if (featureNormType.equals("power+l2")) {
-			l2Normalization = true;
-			powerNormalization = true;
-		} else {
-			throw new Exception("Wrong feature normalization type!");
-		}
-
-		fe.setL2Normalization(l2Normalization);
-		fe.setPowerNormalization(powerNormalization);
 		ImageVectorization.setFeatureExtractor(fe);
 
 		int numCodebooks = codebookFiles.length;
 		// initialize the VLAD object
 		double[][][] codebooks = new double[numCodebooks][][];
-		int initialVectorLength = 0;
 		for (int i = 0; i < numCodebooks; i++) {
 			codebooks[i] = AbstractFeatureAggregator.readQuantizer(codebookFiles[i], numCentroids[i],
 					featureLength);
@@ -115,7 +115,7 @@ public class ImageVectorizer {
 		PCA PCA = null;
 		if (PCAFileName != null && projectionLength < initialVectorLength) {
 			// initialize the PCA object
-			PCA = new PCA(projectionLength, 1, initialVectorLength, true);
+			PCA = new PCA(projectionLength, 1, initialVectorLength, whitening);
 			PCA.loadPCAFromFile(PCAFileName);
 		}
 		ImageVectorization.setPcaProjector(PCA);

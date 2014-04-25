@@ -220,16 +220,21 @@ public abstract class AbstractFeatureAggregator {
 	}
 
 	/**
-	 * Reads the quantizer (codebook) from the given file and returns it as two-dimensional double array.
+	 * Reads a quantizer (codebook) from the given file and returns it in a 2-dimensional double array.
 	 * 
 	 * @param filename
-	 *            the name of the file containing the codebook
+	 *            name of the file containing the quantizer
+	 * @param numCentroids
+	 *            number of centroids of the quantizer
+	 * @param centroidLength
+	 *            length of each centroid
+	 * @return the quantizer as a 2-dimensional double array
 	 * @throws IOException
 	 */
 	public static double[][] readQuantizer(String filename, int numCentroids, int centroidLength)
 			throws IOException {
 		double[][] quantizer = new double[numCentroids][centroidLength];
-		// load the codebook
+		// load the quantizer
 		BufferedReader in = new BufferedReader(new FileReader(filename));
 		String line;
 		int counter = 0;
@@ -246,5 +251,30 @@ public abstract class AbstractFeatureAggregator {
 		}
 		in.close();
 		return quantizer;
+	}
+
+	/**
+	 * Reads multiple quantizers (codebooks) from the given files and returns them in a 3-dimensional double
+	 * array.
+	 * 
+	 * @param filenames
+	 *            names of the files containing the quantizers
+	 * @param numCentroids
+	 *            numbers of centroids of each quantizer
+	 * @param centroidLength
+	 *            length of each centroid
+	 * @return the quantizers as a 3-dimensional double array
+	 * @throws IOException
+	 */
+	public static double[][][] readQuantizers(String[] filenames, int[] numCentroids, int centroidLength)
+			throws IOException {
+		int numQuantizers = filenames.length;
+		double[][][] quantizers = new double[numQuantizers][][];
+		for (int i = 0; i < numQuantizers; i++) {
+			quantizers[i] = AbstractFeatureAggregator.readQuantizer(filenames[i], numCentroids[i],
+					centroidLength);
+		}
+		return quantizers;
+
 	}
 }

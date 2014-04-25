@@ -1,7 +1,5 @@
 package gr.iti.mklab.visual.extraction;
 
-import gr.iti.mklab.visual.utilities.Normalization;
-
 import java.awt.image.BufferedImage;
 
 import boofcv.abst.feature.detdesc.DetectDescribePoint;
@@ -22,12 +20,12 @@ public class SIFTExtractor extends AbstractFeatureExtractor {
 	/**
 	 * Sets the value of {@link boofcv.abst.feature.detect.interest.ConfigSiftDetector#maxFeaturesPerScale}
 	 */
-	private int maxFeaturesPerScale;
+	protected int maxFeaturesPerScale;
 
 	/**
 	 * Sets the value of {@link boofcv.abst.feature.detect.interest.ConfigSiftDetector#detectThreshold}
 	 */
-	private float detectThreshold;
+	protected float detectThreshold;
 
 	/**
 	 * Constructor using default "good" settings for the detector.
@@ -59,14 +57,7 @@ public class SIFTExtractor extends AbstractFeatureExtractor {
 		double[][] descriptions = new double[numPoints][SIFTLength];
 		for (int i = 0; i < numPoints; i++) {
 			descriptions[i] = sift.getDescription(i).getValue();
-			if (powerNormalization) {
-				descriptions[i] = Normalization.normalizePower(descriptions[i], 0.5);
-			}
-			if (l2Normalization) {
-				descriptions[i] = Normalization.normalizeL2(descriptions[i]);
-			}
 		}
 		return descriptions;
 	}
-
 }

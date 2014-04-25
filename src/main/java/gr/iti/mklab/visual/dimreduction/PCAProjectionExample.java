@@ -27,24 +27,30 @@ public class PCAProjectionExample {
 	 * @param args
 	 *            [4] whether to apply whitening
 	 * @param args
-	 *            [5] a comma separated list of the desired projection lengths in increasing order
+	 *            [5] whether to apply L2 normalization after PCA (note: when whitening is true the vectors
+	 *            are already L2 normalized)
+	 * @param args
+	 *            [6] a comma separated list of the desired projection lengths in increasing order
 	 * @throws Exception
 	 */
 	public static void main(String args[]) throws Exception {
 
 		String fullVectorsIndexLocation = args[0];
 		int initialVectorLength = Integer.parseInt(args[1]);
-		int numVectors = Integer.parseInt(args[2]);
+		int maxNumVectors = Integer.parseInt(args[2]);
 		String PCAFileName = args[3];
 		boolean whitening = Boolean.parseBoolean(args[4]);
-		String[] projectionLengthsString = args[5].split(",");
+		boolean L2Normalization = Boolean.parseBoolean(args[5]);
+		String[] projectionLengthsString = args[6].split(",");
 		int[] projectionLengths = new int[projectionLengthsString.length];
 		for (int i = 0; i < projectionLengthsString.length; i++) {
 			projectionLengths[i] = Integer.parseInt(projectionLengthsString[i]);
 		}
 
-		Linear fullVectors = new Linear(initialVectorLength, numVectors, true, fullVectorsIndexLocation,
+		Linear fullVectors = new Linear(initialVectorLength, maxNumVectors, true, fullVectorsIndexLocation,
 				false, true, 0);
+		int actualNumVectors = fullVectors.getLoadCounter();
+		int numVectors = Math.min(actualNumVectors, maxNumVectors);
 
 		// Loading the pca matrix
 		int numComponents = projectionLengths[projectionLengths.length - 1]; // the largest projection length
@@ -57,6 +63,9 @@ public class PCAProjectionExample {
 			String projectedVectorsIndexLocation = fullVectorsIndexLocation + "to" + projectionLengths[i];
 			if (whitening) {
 				projectedVectorsIndexLocation += "w";
+			}
+			if (L2Normalization) {
+				projectedVectorsIndexLocation += "_l2";
 			}
 			projectedVectors[i] = new Linear(projectionLengths[i], numVectors, false,
 					projectedVectorsIndexLocation, false, true, 0);
@@ -71,8 +80,7 @@ public class PCAProjectionExample {
 			for (int j = 0; j < projectedVectors.length; j++) {
 				// the projected vector is then truncated to the appropriate length.
 				double[] truncatedprojectedVec = Arrays.copyOf(projectedVec, projectionLengths[j]);
-				// in the case of whitening we should also apply L2 normalization on the truncated vector
-				if (whitening) {
+				if (L2Normalization) {
 					Normalization.normalizeL2(truncatedprojectedVec);
 				}
 				projectedVectors[j].indexVector(id, truncatedprojectedVec);

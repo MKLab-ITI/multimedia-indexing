@@ -10,34 +10,26 @@ import java.awt.image.BufferedImage;
  */
 public abstract class AbstractFeatureExtractor {
 
-	public static final int SIFTLength = 128;
 	public static final int SURFLength = 64;
+	public static final int SIFTLength = 128;
+	public static final int CololSURFLength = 3 * SURFLength;
 
-	/**
-	 * Whether to apply L2 normalization or not.
-	 */
-	protected boolean l2Normalization = false;
-	/**
-	 * Whether to apply power normalization or not.
-	 */
-	protected boolean powerNormalization = false;
 	/**
 	 * The total feature extraction time.
 	 */
-	private long totalExtractionTime;
+	protected long totalExtractionTime;
 	/**
 	 * The total number of detected interest points.
 	 */
 	protected long totalNumberInterestPoints;
 
-	public void setPowerNormalization(boolean powerNormalization) {
-		this.powerNormalization = powerNormalization;
-	}
-
-	public void setL2Normalization(boolean l2Normalization) {
-		this.l2Normalization = l2Normalization;
-	}
-
+	/**
+	 * Any normalizations of the features should be performed in the specific classes!
+	 * 
+	 * @param image
+	 * @return
+	 * @throws Exception
+	 */
 	public double[][] extractFeatures(BufferedImage image) throws Exception {
 		long start = System.currentTimeMillis();
 		double[][] features = extractFeaturesInternal(image);

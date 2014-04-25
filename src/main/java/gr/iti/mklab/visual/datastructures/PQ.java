@@ -25,8 +25,10 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 /**
- * This class implements indexing using Product Quantization (PQ) and search using Asymmetric (ADC) or
- * Symmetric (SDC) Distance Computation.
+ * This class implements indexing and exhaustive approximate nearest neighbor search using Product
+ * Quantization and search using Asymmetric (ADC) or Symmetric (SDC) Distance Computation as described in:<br>
+ * 
+ * <em>Jégou, H., Douze, M., & Schmid, C. (2011). Product quantization for nearest neighbor search. IEEE Transactions on Pattern Analysis and Machine Intelligence.</em>
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 

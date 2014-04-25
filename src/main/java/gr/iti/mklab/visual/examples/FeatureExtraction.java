@@ -1,5 +1,11 @@
-package gr.iti.mklab.visual.extraction;
+package gr.iti.mklab.visual.examples;
 
+import gr.iti.mklab.visual.extraction.AbstractFeatureExtractor;
+import gr.iti.mklab.visual.extraction.ColorSURFExtractor;
+import gr.iti.mklab.visual.extraction.ImageScaling;
+import gr.iti.mklab.visual.extraction.RootSIFTExtractor;
+import gr.iti.mklab.visual.extraction.SIFTExtractor;
+import gr.iti.mklab.visual.extraction.SURFExtractor;
 import gr.iti.mklab.visual.utilities.FeatureIO;
 import gr.iti.mklab.visual.utilities.ImageIOGreyScale;
 
@@ -10,29 +16,31 @@ import java.io.FilenameFilter;
 import javax.imageio.ImageIO;
 
 /**
- * Extracts SURF or SIFT features from images contained in a directory (only .jpg or .png files) and writes a
- * .surf(b) or .sift(b) file for each image. The feature files are written in a directory named surf or sift
- * that is created (if it does not already exist) inside the images' directory.
+ * Extracts features from images (.jpg or .png files) contained in a directory and writes them in a file for
+ * each image. The feature files are written in a directory (named by the name of the feature) that is created
+ * (if it does not already exist) in the parent directory of the directory were the images reside.
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 
  */
-public class SURForSIFTExtractionExample {
+public class FeatureExtraction {
 
 	/**
 	 * 
 	 * @param args
 	 *            [0] Full path to the images folder.
 	 * @param args
-	 *            [1] Maximum number of images to perform feature extraction on (1491 for Holidays).
+	 *            [1] Maximum number of images to perform feature extraction on, i.e. only the top N images
+	 *            returned by File.list will be processed.
 	 * @param args
 	 *            [2] Number of images to be skipped from extraction (usually 0).
 	 * @param args
-	 *            [3] Maximum number of pixels for each image (e.g. 196608 for 512x384).
+	 *            [3] Maximum number of pixels that each image will be scaled to (e.g. 196608 for 512x384).
 	 * @param args
-	 *            [4] Type of features to extract (surf or sift).
+	 *            [4] Type of features to extract (surf/sift/rootsift/csurf).
 	 * @param args
-	 *            [5] Whether the features should be written in binary format (true) or not (false).
+	 *            [5] Whether the features should be written in textual format (txt) / binary format (bin) or
+	 *            not written (no).
 	 * @throws Exception
 	 */
 	public static void main(String args[]) throws Exception {
@@ -42,7 +50,7 @@ public class SURForSIFTExtractionExample {
 		int skipImages = Integer.parseInt(args[2]);
 		int maxPixels = Integer.parseInt(args[3]);
 		String featureType = args[4];
-		boolean binary = Boolean.parseBoolean(args[5]);
+		String format = args[5];
 
 		ImageScaling scale = new ImageScaling(maxPixels);
 		AbstractFeatureExtractor featureExtractor;
@@ -50,12 +58,13 @@ public class SURForSIFTExtractionExample {
 			featureExtractor = new SURFExtractor();
 		} else if (featureType.equals("sift")) {
 			featureExtractor = new SIFTExtractor();
+		} else if (featureType.equals("rootsift")) {
+			featureExtractor = new RootSIFTExtractor();
+		} else if (featureType.equals("csurf")) {
+			featureExtractor = new ColorSURFExtractor();
 		} else {
 			throw new Exception("Wrong feature type provided.");
 		}
-		// no normalizations are performed at this point
-		featureExtractor.setPowerNormalization(false);
-		featureExtractor.setL2Normalization(false);
 
 		// --------------Load the image files-------------
 		File dir = new File(imageFolder);
@@ -70,7 +79,7 @@ public class SURForSIFTExtractionExample {
 		String[] files = dir.list(filter);
 
 		// create a folder for writing the features
-		String featuresFolder = imageFolder + "/" + featureType;
+		String featuresFolder = imageFolder + "../" + maxPixels + "_" + featureType;
 		File file = new File(featuresFolder);
 		if (!file.exists()) {
 			if (file.mkdir()) {
@@ -82,6 +91,7 @@ public class SURForSIFTExtractionExample {
 
 		double totalReadingTime = 0;
 		double totalScalingTime = 0;
+		double totalWritingTime = 0;
 		int extractedCount = 0;
 		int limit = Math.min(files.length, totalImages);
 		// --------------Extract features for each image-------------
@@ -104,7 +114,6 @@ public class SURForSIFTExtractionExample {
 				System.out.println("Null image: " + files[i]);
 				continue;
 			}
-
 			totalReadingTime += System.currentTimeMillis() - startReading;
 
 			long startScaling = System.currentTimeMillis();
@@ -112,6 +121,7 @@ public class SURForSIFTExtractionExample {
 			totalScalingTime += System.currentTimeMillis() - startScaling;
 
 			double[][] features = featureExtractor.extractFeatures(image);
+
 			// sanity check
 			for (int k = 0; k < features.length; k++) {
 				if (String.valueOf(features[k][0]).equals("NaN")) {
@@ -126,15 +136,17 @@ public class SURForSIFTExtractionExample {
 				imageFileExtension = "png";
 			}
 			// write features to file
-			if (binary) {
+			long startWring = System.currentTimeMillis();
+			if (format.equals("bin")) {
 				String featuresFileName = featuresFolder + "/"
 						+ files[i].split("\\." + imageFileExtension)[0] + "." + featureType + "b";
 				FeatureIO.writeBinary(featuresFileName, features);
-			} else {
+			} else if (format.equals("txt")) {
 				String featuresFileName = featuresFolder + "/"
 						+ files[i].split("\\." + imageFileExtension)[0] + "." + featureType;
 				FeatureIO.writeText(featuresFileName, features);
 			}
+			totalWritingTime += System.currentTimeMillis() - startWring;
 			System.out.println("completed in " + (System.currentTimeMillis() - start) + " ms");
 			extractedCount++;
 		}
@@ -142,6 +154,7 @@ public class SURForSIFTExtractionExample {
 		System.out.println("Average scaling time in ms: " + totalScalingTime / (double) extractedCount);
 		System.out.println("Average extraction time in ms: " + featureExtractor.getTotalExtractionTime()
 				/ (double) extractedCount);
+		System.out.println("Average writing time in ms: " + totalWritingTime / (double) extractedCount);
 		System.out.println("Average number of interest points per image: "
 				+ featureExtractor.getTotalNumberInterestPoints() / (double) extractedCount);
 

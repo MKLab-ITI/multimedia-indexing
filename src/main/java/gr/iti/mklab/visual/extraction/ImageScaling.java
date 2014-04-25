@@ -56,6 +56,10 @@ public class ImageScaling {
 		hint = RenderingHints.VALUE_INTERPOLATION_BILINEAR;
 	}
 
+	public void setTargetSize(int targetSize) {
+		this.targetSize = targetSize;
+	}
+
 	public ImageScaling(int targetSize) {
 		this.targetSize = targetSize;
 		higherQuality = true;

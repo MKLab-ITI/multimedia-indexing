@@ -35,7 +35,8 @@ public class FeatureIO {
 	 */
 	public static ArrayList<double[]> readBinary(String featuresFileName, int featureLength) throws Exception {
 		ArrayList<double[]> features = new ArrayList<double[]>();
-		DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(featuresFileName)));
+		DataInputStream in = new DataInputStream(new BufferedInputStream(
+				new FileInputStream(featuresFileName)));
 
 		int counter = 0;
 		double[] desc = new double[featureLength];
@@ -75,8 +76,8 @@ public class FeatureIO {
 			String[] stringVals = line.split(",");
 			if (stringVals.length != featureLength) {
 				in.close();
-				throw new Exception("Line contains " + stringVals.length + " comma separated values instead of "
-						+ featureLength + "\n" + line);
+				throw new Exception("Line contains " + stringVals.length
+						+ " comma separated values instead of " + featureLength + "\n" + line);
 			}
 			double[] vals = new double[featureLength];
 			for (int j = 0; j < featureLength; j++) {
@@ -98,7 +99,8 @@ public class FeatureIO {
 	 * @throws Exception
 	 */
 	public static void writeBinary(String featuresFileName, double[][] features) throws Exception {
-		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(featuresFileName)));
+		DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
+				featuresFileName)));
 		for (int i = 0; i < features.length; i++) {
 			for (int j = 0; j < features[i].length; j++) {
 				out.writeDouble(features[i][j]);
@@ -154,8 +156,8 @@ public class FeatureIO {
 				System.out.println("Converting file " + i);
 			}
 			BufferedReader in = new BufferedReader(new FileReader(new File(featuresFolder + files[i])));
-			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(featuresFolder
-					+ files[i] + "b")));
+			DataOutputStream out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(
+					featuresFolder + files[i] + "b")));
 			String line;
 			while ((line = in.readLine()) != null) {
 				String[] nums = line.split(",");
@@ -195,10 +197,10 @@ public class FeatureIO {
 				System.out.println("Converting file " + i);
 			}
 
-			DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(featuresFolder
-					+ files[i])));
-			BufferedWriter out = new BufferedWriter(
-					new FileWriter(new File(featuresFolder + files[i].replace("b", ""))));
+			DataInputStream in = new DataInputStream(new BufferedInputStream(new FileInputStream(
+					featuresFolder + files[i])));
+			BufferedWriter out = new BufferedWriter(new FileWriter(new File(featuresFolder
+					+ files[i].replace("b", ""))));
 			long counter = 0;
 			while (true) {
 				try {

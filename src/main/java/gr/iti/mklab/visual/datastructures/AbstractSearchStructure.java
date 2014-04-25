@@ -244,7 +244,7 @@ public abstract class AbstractSearchStructure {
 		for (int i = 0; i < nn.length; i++) { // attach external ids to the results
 			int iid = nn[i].getInternalId();
 			String id = getId(iid);
-			nn[i].setId(id);
+			nn[i].setExternalId(id);
 		}
 		long nameLookupTime = System.nanoTime() - start;
 
@@ -304,7 +304,7 @@ public abstract class AbstractSearchStructure {
 		for (int i = 0; i < nn.length; i++) { // attach external ids to the results
 			int iid = nn[i].getInternalId();
 			String id = getId(iid);
-			nn[i].setId(id);
+			nn[i].setExternalId(id);
 		}
 		long nameLookupTime = System.nanoTime() - start;
 
@@ -574,8 +574,8 @@ public abstract class AbstractSearchStructure {
 	private void createOrOpenBDBEnv(String BDBEnvHome) throws Exception {
 		// create the BDBEnvHome directory if it does not exist
 		File BDBEnvHomeDir = new File(BDBEnvHome);
-		if (!BDBEnvHomeDir.exists()) {
-			boolean success = BDBEnvHomeDir.mkdirs();
+		if (!BDBEnvHomeDir.isDirectory()) {
+			boolean success = BDBEnvHomeDir.mkdir();
 			if (success) {
 				System.out.println(BDBEnvHome + " directory created.");
 			}

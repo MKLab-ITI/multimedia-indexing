@@ -29,8 +29,10 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 /**
- * This class implements indexing using and Inverted File and Product Quantization (IVFPQ) and search using
- * Asymmetric (IVFADC) or Symmetric (IVFSDC) Distance Computation.
+ * This class implements indexing and non-exhaustive approximate nearest neighbor search using the combination
+ * of Product Quantization with an inverted file structure (IVFADC) as described in:<br>
+ * 
+ * <em>Jégou, H., Douze, M., & Schmid, C. (2011). Product quantization for nearest neighbor search. IEEE Transactions on Pattern Analysis and Machine Intelligence.</em>
  * 
  * @author Eleftherios Spyromitros-Xioufis
  * 

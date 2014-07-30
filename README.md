@@ -1,12 +1,14 @@
 # multimedia-indexing
 
-A framework for large-scale feature extraction, indexing and retrieval. A preliminary version of this framework was used to conduct the experimental study by [Spyromitros-Xioufis et al. (2012)](http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6226771 "Spyromitros-Xioufis et al., 2012"). In case you use this implementation in your research, please cite the [respective paper]((http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6226771 "Spyromitros-Xioufis et al., 2012").
+A framework for large-scale feature extraction, indexing and retrieval. 
+This framework was used to conduct the experimental study by [Spyromitros-Xioufis et al., (2014)](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6847226 "Spyromitros-Xioufis et al., 2014"). 
+In case you use this implementation in your research, please cite [this paper](http://ieeexplore.ieee.org/xpls/abs_all.jsp?arnumber=6847226 "Spyromitros-Xioufis et al., 2014").
 
 ## Getting Started
 
 This page contains instructions on how to use the library for:
 
--   Extracting SURF or SIFT features from an image
+-   Extracting SURF or SIFT features from an image (RootSIFT and ColorSURF features are also supported)
 
 -   Aggregating a set of local descriptors into a VLAD vector
 

@@ -89,7 +89,7 @@ public class FolderIndexingMT {
 						|| name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".gif"))
 					return true;
 				else
-					return true;
+					return false;
 			}
 		};
 		String[] files = dir.list(filter);

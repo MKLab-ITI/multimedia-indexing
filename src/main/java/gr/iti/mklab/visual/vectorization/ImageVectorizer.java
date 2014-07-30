@@ -215,12 +215,26 @@ public class ImageVectorizer {
 	}
 
 	/**
-	 * Shut the vectorization executor down, waiting for up to 10 seconds for the remaining tasks to complete.
+	 * Shuts the vectorization executor down, waiting for up to 10 seconds for the remaining tasks to
+	 * complete. See http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html
 	 * 
-	 * @throws InterruptedException
 	 */
-	public void shutDown() throws InterruptedException {
-		vectorizationExecutor.shutdown();
-		vectorizationExecutor.awaitTermination(10, TimeUnit.SECONDS);
+	public void shutDown() {
+		vectorizationExecutor.shutdown(); // Disable new tasks from being submitted
+		try {
+			// Wait a while for existing tasks to terminate
+			if (!vectorizationExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+				vectorizationExecutor.shutdownNow(); // Cancel currently executing tasks
+				// Wait a while for tasks to respond to being cancelled
+				if (!vectorizationExecutor.awaitTermination(10, TimeUnit.SECONDS))
+					System.err.println("Pool did not terminate");
+			}
+		} catch (InterruptedException ie) {
+			// (Re-)Cancel if current thread also interrupted
+			vectorizationExecutor.shutdownNow();
+			// Preserve interrupt status
+			Thread.currentThread().interrupt();
+		}
 	}
+
 }

@@ -156,13 +156,26 @@ public class ImageDownloader {
 	}
 
 	/**
-	 * Shut the download executor down, waiting for up to 10 seconds for the remaining tasks to complete.
+	 * Shuts the download executor down, waiting for up to 60 seconds for the remaining tasks to complete. See
+	 * http://docs.oracle.com/javase/7/docs/api/java/util/concurrent/ExecutorService.html
 	 * 
-	 * @throws InterruptedException
 	 */
-	public void shutDown() throws InterruptedException {
-		downloadExecutor.shutdown();
-		downloadExecutor.awaitTermination(10, TimeUnit.SECONDS);
+	public void shutDown() {
+		downloadExecutor.shutdown(); // Disable new tasks from being submitted
+		try {
+			// Wait a while for existing tasks to terminate
+			if (!downloadExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+				downloadExecutor.shutdownNow(); // Cancel currently executing tasks
+				// Wait a while for tasks to respond to being cancelled
+				if (!downloadExecutor.awaitTermination(60, TimeUnit.SECONDS))
+					System.err.println("Pool did not terminate");
+			}
+		} catch (InterruptedException ie) {
+			// (Re-)Cancel if current thread also interrupted
+			downloadExecutor.shutdownNow();
+			// Preserve interrupt status
+			Thread.currentThread().interrupt();
+		}
 	}
 
 	/**

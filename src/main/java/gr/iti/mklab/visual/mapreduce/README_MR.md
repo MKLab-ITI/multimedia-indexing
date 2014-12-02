@@ -40,6 +40,7 @@ hadoop dfs -cat /output/part-r-00000
 mapred-site.xml configuration for local pseudodistributed mode
 ==============================================================
 
+```
 <configuration>
 	<property>
    <name>mapreduce.framework.name</name>
@@ -63,6 +64,7 @@ mapred-site.xml configuration for local pseudodistributed mode
   </property>
 
 </configuration>
+```
 
 Stackoverflow thread concerning heap space problem
 ==================================================

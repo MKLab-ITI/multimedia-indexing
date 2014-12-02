@@ -27,6 +27,11 @@
             <name>Manos Schinas</name>
             <email>manosetro@iti.gr</email>
         </developer>
+        <developer>
+            <id>kandreadou</id>
+            <name>Katerina Andreadou</name>
+            <email>kandreadou@iti.gr</email>
+        </developer>
     </developers>
     
  	<licenses>

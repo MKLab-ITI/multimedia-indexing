@@ -1,5 +1,7 @@
 package gr.iti.mklab.download;
 
+import gr.iti.mklab.visual.mapreduce.HadoopImageDownload;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -86,6 +88,20 @@ public class ImageDownloader {
 		pool.submit(call);
 		numPendingTasks++;
 	}
+
+    /**
+     * Submits a new hadoop image download task.
+     *
+     * @param URL
+     *            The url of the image
+     * @param id
+     *            The id of the image (used to name the image file after download)
+     */
+    public void submitHadoopDownloadTask(String URL, String id) {
+        Callable<ImageDownloadResult> call = new HadoopImageDownload(URL, id, followRedirects);
+        pool.submit(call);
+        numPendingTasks++;
+    }
 
 	/**
 	 * Gets an image download results from the pool.

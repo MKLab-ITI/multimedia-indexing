@@ -34,12 +34,6 @@ public class Linear extends AbstractSearchStructure {
 	private TDoubleArrayList vectorsList;
 
 	/**
-	 * Whether the index will be loaded in memory. We can avoid loading the index in memory when we only want
-	 * to perform indexing.
-	 */
-	private boolean loadIndexInMemory;
-
-	/**
 	 * Whether to use a disk ordered cursor or not. This setting changes how fast the index will be loaded in
 	 * main memory.
 	 */
@@ -72,9 +66,8 @@ public class Linear extends AbstractSearchStructure {
 	 */
 	public Linear(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome,
 			boolean loadIndexInMemory, boolean countSizeOnLoad, int loadCounter) throws Exception {
-		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter);
+		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory);
 		createOrOpenBDBEnvAndDbs(BDBEnvHome);
-		this.loadIndexInMemory = loadIndexInMemory;
 		// configuration of the persistent index
 		DatabaseConfig dbConf = new DatabaseConfig();
 		dbConf.setReadOnly(readOnly);
@@ -144,9 +137,6 @@ public class Linear extends AbstractSearchStructure {
 	 */
 	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] queryVector)
 			throws Exception {
-		if (!loadIndexInMemory) {
-			throw new Exception("Cannot execute query because the index is not loaded in memory!");
-		}
 		BoundedPriorityQueue<Result> nn = new BoundedPriorityQueue<Result>(new Result(), k);
 
 		double lowest = Double.MAX_VALUE;

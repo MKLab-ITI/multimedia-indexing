@@ -161,12 +161,15 @@ public class IVFPQ extends AbstractSearchStructure {
 	 *            Whether the load counter will be initialized by the size of the persistent store
 	 * @param loadCounter
 	 *            The initial value of the load counter
+	 * @param loadIndexInMemory
+	 *            Whether to load the index in memory, we can avoid loading the index in memory when we only
+	 *            want to perform indexing
 	 * @throws Exception
 	 */
 	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
 			int numProductCentroids, TransformationType transformation, int numCoarseCentroids,
-			boolean countSizeOnLoad, int loadCounter) throws Exception {
-		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter);
+			boolean countSizeOnLoad, int loadCounter, boolean loadIndexInMemory) throws Exception {
+		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory);
 		this.numSubVectors = numSubVectors;
 		if (vectorLength % numSubVectors > 0) {
 			throw new Exception("The given number of subvectors is not valid!");
@@ -192,30 +195,33 @@ public class IVFPQ extends AbstractSearchStructure {
 		dbConf.setAllowCreate(true); // db will be created if it does not exist
 		iidToIvfpqDB = dbEnv.openDatabase(null, "ivfadc", dbConf); // create/open the db using config
 
-		invertedLists = new TIntArrayList[numCoarseCentroids];
-		int initialListCapacity = (int) ((double) maxNumVectors / numCoarseCentroids);
-		System.out.println("Calculated list size " + initialListCapacity);
+		if (loadIndexInMemory) {// load the existing persistent index in memory
+			// create the memory objects with the appropriate initial size
+			invertedLists = new TIntArrayList[numCoarseCentroids];
+			int initialListCapacity = (int) ((double) maxNumVectors / numCoarseCentroids);
+			System.out.println("Calculated list size " + initialListCapacity);
 
-		if (numProductCentroids <= 256) {
-			pqByteCodes = new TByteArrayList[numCoarseCentroids];
-		} else {
-			pqShortCodes = new TShortArrayList[numCoarseCentroids];
-		}
-
-		for (int i = 0; i < numCoarseCentroids; i++) {
-			// fixed initial size for each list, allows space efficiency measurements
 			if (numProductCentroids <= 256) {
-				pqByteCodes[i] = new TByteArrayList(initialListCapacity * numSubVectors);
+				pqByteCodes = new TByteArrayList[numCoarseCentroids];
 			} else {
-				pqShortCodes[i] = new TShortArrayList(initialListCapacity * numSubVectors);
+				pqShortCodes = new TShortArrayList[numCoarseCentroids];
 			}
-			invertedLists[i] = new TIntArrayList(initialListCapacity);
-			// no initial size set, allows more efficient space usage
-			// invertedListVectors[i] = new TByteArrayList();
-			// invertedListIds[i] = new TIntArrayList();
+
+			for (int i = 0; i < numCoarseCentroids; i++) {
+				// fixed initial size for each list, allows space efficiency measurements
+				if (numProductCentroids <= 256) {
+					pqByteCodes[i] = new TByteArrayList(initialListCapacity * numSubVectors);
+				} else {
+					pqShortCodes[i] = new TShortArrayList(initialListCapacity * numSubVectors);
+				}
+				invertedLists[i] = new TIntArrayList(initialListCapacity);
+				// no initial size set, allows more efficient space usage
+				// invertedListVectors[i] = new TByteArrayList();
+				// invertedListIds[i] = new TIntArrayList();
+			}
+			// load any existing persistent index in memory
+			loadIndexInMemory();
 		}
-		// load any existing persistent index in memory
-		loadIndexInMemory();
 	}
 
 	/**
@@ -242,7 +248,7 @@ public class IVFPQ extends AbstractSearchStructure {
 			int numProductCentroids, TransformationType transformation, int numCoarseCentroids)
 			throws Exception {
 		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
-				transformation, numCoarseCentroids, true, 0);
+				transformation, numCoarseCentroids, true, 0, true);
 	}
 
 	/**
@@ -314,16 +320,22 @@ public class IVFPQ extends AbstractSearchStructure {
 			pqCode[i] = computeNearestProductIndex(subvector, i);
 		}
 
-		// add a new entry to the corresponding inverted list
-		invertedLists[nearestCoarseCentroidIndex].add(loadCounter);
+		if (loadIndexInMemory) { // append the ram-based index
+			// add a new entry to the corresponding inverted list
+			invertedLists[nearestCoarseCentroidIndex].add(loadCounter);
+		}
 
 		if (numProductCentroids <= 256) {
 			byte[] pqByteCode = PQ.transformToByte(pqCode);
-			pqByteCodes[nearestCoarseCentroidIndex].add(pqByteCode); // append the ram-based index
+			if (loadIndexInMemory) { // append the ram-based index
+				pqByteCodes[nearestCoarseCentroidIndex].add(pqByteCode);
+			}
 			appendPersistentIndex(nearestCoarseCentroidIndex, pqByteCode); // append the disk-based index
 		} else {
 			short[] pqShortCode = PQ.transformToShort(pqCode);
-			pqShortCodes[nearestCoarseCentroidIndex].add(pqShortCode); // append the ram-based index
+			if (loadIndexInMemory) { // append the ram-based index
+				pqShortCodes[nearestCoarseCentroidIndex].add(pqShortCode); // append the ram-based index
+			}
 			appendPersistentIndex(nearestCoarseCentroidIndex, pqShortCode); // append the disk-based index
 		}
 	}

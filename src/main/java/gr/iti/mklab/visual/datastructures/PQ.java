@@ -1,6 +1,7 @@
 package gr.iti.mklab.visual.datastructures;
 
 import gnu.trove.list.array.TByteArrayList;
+import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TShortArrayList;
 import gr.iti.mklab.visual.utilities.RandomPermutation;
 import gr.iti.mklab.visual.utilities.RandomRotation;
@@ -134,12 +135,15 @@ public class PQ extends AbstractSearchStructure {
 	 *            Whether the load counter will be initialized by the size of the persistent store
 	 * @param loadCounter
 	 *            The initial value of the load counter
+	 * @param loadIndexInMemory
+	 *            Whether to load the index in memory, we can avoid loading the index in memory when we only
+	 *            want to perform indexing
 	 * @throws Exception
 	 */
 	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
 			int numProductCentroids, TransformationType transformation, boolean countSizeOnLoad,
-			int loadCounter) throws Exception {
-		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter);
+			int loadCounter, boolean loadIndexInMemory) throws Exception {
+		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory);
 		this.numSubVectors = numSubVectors;
 		if (vectorLength % numSubVectors > 0) {
 			throw new Exception("The given number of subvectors is not valid!");
@@ -163,13 +167,16 @@ public class PQ extends AbstractSearchStructure {
 		dbConf.setAllowCreate(true); // db will be created if it does not exist
 		iidToPqDB = dbEnv.openDatabase(null, "adc", dbConf); // create/open the db using config
 
-		if (numProductCentroids <= 256) {
-			pqByteCodes = new TByteArrayList(maxNumVectors * numSubVectors);
-		} else {
-			pqShortCodes = new TShortArrayList(maxNumVectors * numSubVectors);
+		if (loadIndexInMemory) {// load the existing persistent index in memory
+			// create the memory objects with the appropriate initial size
+			if (numProductCentroids <= 256) {
+				pqByteCodes = new TByteArrayList(maxNumVectors * numSubVectors);
+			} else {
+				pqShortCodes = new TShortArrayList(maxNumVectors * numSubVectors);
+			}
+			// load any existing persistent index in memory
+			loadIndexInMemory();
 		}
-		// load any existing persistent index in memory
-		loadIndexInMemory();
 	}
 
 	/**
@@ -194,7 +201,7 @@ public class PQ extends AbstractSearchStructure {
 	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
 			int numProductCentroids, TransformationType transformation) throws Exception {
 		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
-				transformation, true, 0);
+				transformation, true, 0, true);
 	}
 
 	/**
@@ -250,13 +257,18 @@ public class PQ extends AbstractSearchStructure {
 
 		if (numProductCentroids <= 256) {
 			byte[] pqByteCode = transformToByte(pqCode);
-			pqByteCodes.add(pqByteCode); // append the ram-based index
+			if (loadIndexInMemory) { // append the ram-based index
+				pqByteCodes.add(pqByteCode);
+			}
 			appendPersistentIndex(pqByteCode); // append the disk-based index
 		} else {
 			short[] pqShortCode = transformToShort(pqCode);
-			pqShortCodes.add(pqShortCode); // append the ram-based index
+			if (loadIndexInMemory) { // append the ram-based index
+				pqShortCodes.add(pqShortCode);
+			}
 			appendPersistentIndex(pqShortCode); // append the disk-based index
 		}
+
 	}
 
 	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] query)

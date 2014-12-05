@@ -60,6 +60,12 @@ public abstract class AbstractSearchStructure {
 	protected int loadCounter;
 
 	/**
+	 * Whether the index will be loaded in memory. We can avoid loading the index in memory when we only want
+	 * to perform indexing.
+	 */
+	protected boolean loadIndexInMemory;
+
+	/**
 	 * The maximum number of vectors that can be indexed.
 	 */
 	protected final int maxNumVectors;
@@ -140,7 +146,7 @@ public abstract class AbstractSearchStructure {
 	 *            If true the persistent store will opened only for read access (allows multiple opens)
 	 */
 	protected AbstractSearchStructure(int vectorLength, int maxNumVectors, boolean readOnly) {
-		this(vectorLength, maxNumVectors, readOnly, true, 0);
+		this(vectorLength, maxNumVectors, readOnly, true, 0, true);
 	}
 
 	/**
@@ -157,14 +163,18 @@ public abstract class AbstractSearchStructure {
 	 *            Whether the load counter will be initialized by the size of the persistent store
 	 * @param loadCounter
 	 *            The initial value of the load counter
+	 * @param loadIndexInMemory
+	 *            Whether to load the index in memory, we can avoid loading the index in memory when we only
+	 *            want to perform indexing
 	 */
 	protected AbstractSearchStructure(int vectorLength, int maxNumVectors, boolean readOnly,
-			boolean countSizeOnLoad, int loadCounter) {
+			boolean countSizeOnLoad, int loadCounter, boolean loadIndexInMemory) {
 		this.vectorLength = vectorLength;
 		this.loadCounter = loadCounter;
 		this.maxNumVectors = maxNumVectors;
 		this.readOnly = readOnly;
 		this.countSizeOnLoad = countSizeOnLoad;
+		this.loadIndexInMemory = loadIndexInMemory;
 	}
 
 	/**
@@ -233,6 +243,9 @@ public abstract class AbstractSearchStructure {
 	 * @throws Exception
 	 */
 	public Answer computeNearestNeighbors(int k, double[] queryVector) throws Exception {
+		if (!loadIndexInMemory) {
+			throw new Exception("Cannot execute query because the index is not loaded in memory!");
+		}
 		long start = System.nanoTime();
 		BoundedPriorityQueue<Result> nnQueue = computeNearestNeighborsInternal(k, queryVector);
 		long indexSearchTime = System.nanoTime() - start;

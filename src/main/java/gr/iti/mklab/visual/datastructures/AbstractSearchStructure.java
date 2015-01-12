@@ -39,15 +39,15 @@ import com.sleepycat.persist.StoreConfig;
 public abstract class AbstractSearchStructure {
 
 	/**
-	 * The total memory to be used by the BDB, 100Mb by default. Larger values will allow faster id lookup.
+	 * The total memory to be used by the BDB, 512Mb by default. Larger values will allow faster id lookup.
 	 */
-	protected final long cacheSize = 1024 * 1024 * 100;
+	protected final long cacheSize = 1024 * 1024 * 512;
 
 	/**
 	 * Whether the environment will be transactional. If true, ensures that the dbs will not be corrupted. <br>
 	 * For more information on what this means, refer to the BDB documentation.
 	 */
-	protected final boolean transactional = true;
+	protected boolean transactional = false;
 
 	/**
 	 * The length of the raw vectors being indexed.
@@ -530,7 +530,7 @@ public abstract class AbstractSearchStructure {
 	 * @param id
 	 *            The id
 	 */
-	private void createMapping(String id) {
+	protected void createMapping(String id) {
 		DatabaseEntry key = new DatabaseEntry();
 		DatabaseEntry data = new DatabaseEntry();
 		IntegerBinding.intToEntry(loadCounter, key);
@@ -555,8 +555,11 @@ public abstract class AbstractSearchStructure {
 
 		// if countSizeOnLoad is true, the id-name mappings are counted and the loadCounter is initialized
 		if (countSizeOnLoad) {
+			System.out.println(new Date() + " counting index size started ");
 			int idToNameMappings = (int) iidToIdDB.count();
 			loadCounter = Math.min(idToNameMappings, maxNumVectors);
+			System.out.println(new Date() + " counting index size ended ");
+			System.out.println("Index size: " + loadCounter);
 		}
 
 		idToIidDB = dbEnv.openDatabase(null, "nameToId", dbConfig);

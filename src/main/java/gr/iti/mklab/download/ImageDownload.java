@@ -149,7 +149,7 @@ public class ImageDownload implements Callable<ImageDownloadResult> {
 	 * @return The image as a BufferedImage object.
 	 * @throws Exception
 	 */
-	private BufferedImage downloadImage() throws Exception {
+	public BufferedImage downloadImage() throws Exception {
 		BufferedImage image = null;
 		// try to recognize the type of the image from the url so that the correct format and file extension
 		// are used when saving the thumbnail image or the original image.

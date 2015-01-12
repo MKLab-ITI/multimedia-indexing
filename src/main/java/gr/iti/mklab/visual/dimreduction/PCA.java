@@ -287,6 +287,9 @@ public class PCA {
 
 		V_t = new DenseMatrix64F(numComponents, sampleSize);
 		for (int i = 0; i < numComponents; i++) {
+			if (i % 100 == 0) {
+				System.out.println(i + " PCA components loaded.");
+			}
 			try {
 				line = in.readLine();
 			} catch (IOException e) {
@@ -302,6 +305,7 @@ public class PCA {
 
 		// if whitening is true then whiten the PCA matrix V_t by multiplying it with W
 		if (doWhitening) {
+			System.out.print("Whitening the PCA matrix..");
 			DenseMatrix64F V_t_w = new DenseMatrix64F(numComponents, sampleSize);
 			CommonOps.mult(W, V_t, V_t_w);
 			V_t = V_t_w;

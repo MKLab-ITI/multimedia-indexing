@@ -102,7 +102,7 @@ public class IndexTransformation {
 				int k_c = Integer.parseInt(args[11]);
 				// === re-index to an IVFPQ index ===
 				toIndex = new IVFPQ(targetVectorLength, maxNumIndexedVectors, false, targetIndexFolder, m,
-						k_s, transformation, k_c);
+						k_s, transformation, k_c, 512);
 				((IVFPQ) toIndex).loadCoarseQuantizer(coarseQuantizerFile);
 				((IVFPQ) toIndex).loadProductQuantizer(productQuantizerFile);
 			}

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Date;
 
 import com.aliasi.util.BoundedPriorityQueue;
 import com.sleepycat.bind.tuple.IntegerBinding;
@@ -73,6 +74,21 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * byte range.
 	 */
 	private TShortArrayList[] pqShortCodes;
+
+	public int getInvertedListSize(int listIndex) {
+		return invertedLists[listIndex].size();
+	}
+
+	public byte[] getPQCode(int listId, int index) {
+		int codeStart = index * numSubVectors;
+		byte[] pqCode = pqByteCodes[listId].toArray(codeStart, numSubVectors);
+		return pqCode;
+	}
+
+	public int getIid(int listId, int index) {
+		int iid = invertedLists[listId].getQuick(index);
+		return iid;
+	}
 
 	/**
 	 * The inverted lists containing the internal ids of the vectors qunatized in each list.
@@ -164,12 +180,16 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @param loadIndexInMemory
 	 *            Whether to load the index in memory, we can avoid loading the index in memory when we only
 	 *            want to perform indexing
+	 * @param cacheSize
+	 *            the size of the cache in Megabytes
 	 * @throws Exception
 	 */
 	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
 			int numProductCentroids, TransformationType transformation, int numCoarseCentroids,
-			boolean countSizeOnLoad, int loadCounter, boolean loadIndexInMemory) throws Exception {
-		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory);
+			boolean countSizeOnLoad, int loadCounter, boolean loadIndexInMemory, long cacheSize)
+			throws Exception {
+		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory,
+				cacheSize);
 		this.numSubVectors = numSubVectors;
 		if (vectorLength % numSubVectors > 0) {
 			throw new Exception("The given number of subvectors is not valid!");
@@ -198,8 +218,6 @@ public class IVFPQ extends AbstractSearchStructure {
 		if (loadIndexInMemory) {// load the existing persistent index in memory
 			// create the memory objects with the appropriate initial size
 			invertedLists = new TIntArrayList[numCoarseCentroids];
-			int initialListCapacity = (int) ((double) maxNumVectors / numCoarseCentroids);
-			System.out.println("Calculated list size " + initialListCapacity);
 
 			if (numProductCentroids <= 256) {
 				pqByteCodes = new TByteArrayList[numCoarseCentroids];
@@ -207,17 +225,23 @@ public class IVFPQ extends AbstractSearchStructure {
 				pqShortCodes = new TShortArrayList[numCoarseCentroids];
 			}
 
+			int initialListCapacity = (int) ((double) maxNumVectors / numCoarseCentroids);
+			System.out.println("Calculated list size " + initialListCapacity);
+
 			for (int i = 0; i < numCoarseCentroids; i++) {
-				// fixed initial size for each list, allows space efficiency measurements
 				if (numProductCentroids <= 256) {
-					pqByteCodes[i] = new TByteArrayList(initialListCapacity * numSubVectors);
+					// pqByteCodes[i] = new TByteArrayList(initialListCapacity * numSubVectors);
+					pqByteCodes[i] = new TByteArrayList();
+
 				} else {
+					// fixed initial size for each list, allows space efficiency measurements
 					pqShortCodes[i] = new TShortArrayList(initialListCapacity * numSubVectors);
+					pqShortCodes[i] = new TShortArrayList();
+
 				}
-				invertedLists[i] = new TIntArrayList(initialListCapacity);
-				// no initial size set, allows more efficient space usage
-				// invertedListVectors[i] = new TByteArrayList();
-				// invertedListIds[i] = new TIntArrayList();
+				// fixed initial size for each list, allows space efficiency measurements
+				// invertedLists[i] = new TIntArrayList(initialListCapacity);
+				invertedLists[i] = new TIntArrayList();
 			}
 			// load any existing persistent index in memory
 			loadIndexInMemory();
@@ -242,13 +266,15 @@ public class IVFPQ extends AbstractSearchStructure {
 	 *            The type of transformation to perform on each vector
 	 * @param numCoarseCentroids
 	 *            The number of centroids of the coarse quantizer
+	 * @param cacheSize
+	 *            the size of the cache in Megabytes
 	 * @throws Exception
 	 */
 	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
-			int numProductCentroids, TransformationType transformation, int numCoarseCentroids)
+			int numProductCentroids, TransformationType transformation, int numCoarseCentroids, long cacheSize)
 			throws Exception {
 		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
-				transformation, numCoarseCentroids, true, 0, true);
+				transformation, numCoarseCentroids, true, 0, true, cacheSize);
 	}
 
 	/**
@@ -338,6 +364,36 @@ public class IVFPQ extends AbstractSearchStructure {
 			}
 			appendPersistentIndex(nearestCoarseCentroidIndex, pqShortCode); // append the disk-based index
 		}
+	}
+
+	public synchronized boolean indexPQCode(String id, int listId, byte[] code) throws Exception {
+		if (numProductCentroids > 256) {
+			throw new Exception("Byte is not sufficient to enumerate the centroids of the product quantizer!");
+		}
+		// check if we can index more vectors
+		if (loadCounter >= maxNumVectors) {
+			System.out.println("Maximum index capacity reached, no more vectors can be indexed!");
+			return false;
+		}
+		// check if name is already indexed
+		if (isIndexed(id)) {
+			System.out.println("Vector '" + id + "' already indexed!");
+			return false;
+		}
+		// do the indexing
+		// persist id to name and the reverse mapping
+		createMapping(id);
+		if (loadIndexInMemory) { // append the ram-based index
+			invertedLists[listId].add(loadCounter);
+			pqByteCodes[listId].add(code);
+		}
+		appendPersistentIndex(listId, code); // append the disk-based index
+
+		loadCounter++; // increase the loadCounter
+		if (loadCounter % 100 == 0) { // debug message
+			System.out.println(new Date() + " # indexed vectors: " + loadCounter);
+		}
+		return true;
 	}
 
 	protected BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, double[] query)

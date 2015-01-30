@@ -10,6 +10,9 @@ import gr.iti.mklab.visual.vectorization.ImageVectorizationResult;
 import gr.iti.mklab.visual.vectorization.ImageVectorizer;
 
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.Arrays;
 
 /**
@@ -29,9 +32,13 @@ public class YFCC100MExample {
 	 * <li>The IVFPQ index is loaded in memory</li>
 	 * <li>The coarse and product quantizer are loaded from files.</li>
 	 * <li>An image vectorizer is initialized (i.e. codebooks and pca matrix are loaded).</li>
-	 * <li>A query image is downloaded from the supplied url.</li>
+	 * <li>A txt file with one image url per line is parsed and for each url:
+	 * <ul>
+	 * <li>The image is downloaded.</li>
 	 * <li>The image is vectorized and the vector is used to query the index.</li>
-	 * <li>Most similar image urls are printed.</li>
+	 * <li>Most similar images are downloaded and their urls are printed on the console.</li>
+	 * </ul>
+	 * </li>
 	 * </ul>
 	 * 
 	 * Depending on the number of images that are loaded, a sufficient amount of memory should be allocated
@@ -45,14 +52,21 @@ public class YFCC100MExample {
 	 * @param args
 	 *            [2] Path to the folder where the learning files reside
 	 * @param args
-	 *            [3] URL of a query image
+	 *            [3] Path to a file that contains the URLs of the query images, one per row.
+	 * @param args
+	 *            [4] Number of coarse quantizer lists to be searched out of 8192. Use a small number (1 or 2)
+	 *            if the whole collection is loaded.
+	 * @param args
+	 *            [5] The size of the cache in Megabytes (use 1024 or 2048).
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
 		String ivfPqIndexPath = args[0];
 		int maxNumVectors = Integer.parseInt(args[1]);
 		String learningFilesPath = args[2];
-		String url = args[3];
+		String urlFile = args[3];
+		int w = Integer.parseInt(args[4]);
+		long cacheSize = Long.parseLong(args[5]);
 
 		String coarseQuantizerFilename = learningFilesPath + "qcoarse_1024d_8192k.csv";
 		String productQuantizerFilename = learningFilesPath + "pq_1024_64x8_rp_ivf_8192k.csv";
@@ -77,7 +91,7 @@ public class YFCC100MExample {
 		// Create an IVFPQ object and load the index in memory
 		IVFPQ ivfpq = new IVFPQ(projectionLength, maxNumVectors, readonly, ivfPqIndexPath, numSubVectors,
 				numProductCentroids, transformation, numCoarseCentroids, countSizeOnLoad, loadCounter,
-				loadIndexInMemory);
+				loadIndexInMemory, cacheSize);
 		System.out.print("Loading coarse and product quantizer..");
 		ivfpq.loadCoarseQuantizer(coarseQuantizerFilename);
 		ivfpq.loadProductQuantizer(productQuantizerFilename);
@@ -89,63 +103,66 @@ public class YFCC100MExample {
 		ImageVectorizer vectorizer = new ImageVectorizer("surf", codebookFiles, numCentroids,
 				projectionLength, pcaFile, true, 1);
 		// set a max size similar to that of the indexed images!
-		vectorizer.setMaxImageSizeInPixels(maxSizeInPixels);
+		vectorizer.setMaxImageSizeInPixels(640 * 480);
 		System.out.println("..completed!");
 
-		String id = "1"; // a dummy id is given
-		String downloadFolder = "";
-		ImageDownload imd = new ImageDownload(url, id, downloadFolder, false, true, false);
-		System.out.print("Downloading the image..");
-		BufferedImage image = imd.downloadImage();
-		System.out.println("..completed!");
+		// opening the URLs file for reading
+		BufferedReader in = new BufferedReader(new FileReader(new File(urlFile)));
+		String url;
+		int totalSearchTime = 0;
+		int totalLookupTime = 0;
+		int queryCounter = 0;
+		while ((url = in.readLine()) != null) {
+			queryCounter++;
+			String queryId = "query_image_" + queryCounter; // a dummy id is given
+			String downloadFolder = "";
+			ImageDownload imd = new ImageDownload(url.replace(" ", "%20"), queryId, downloadFolder, false,
+					true, false);
+			System.out.print("Downloading the image..");
+			BufferedImage image = imd.downloadImage();
+			System.out.println("..completed!");
 
-		System.out.print("Computing the vector..");
-		vectorizer.submitImageVectorizationTask(id, image);
-		ImageVectorizationResult result = vectorizer.getImageVectorizationResultWait();
-		double[] vector = result.getImageVector();
-		vectorizer.shutDown();
-		System.out.println("Query vector: " + Arrays.toString(Arrays.copyOf(vector, 10)));
-		System.out.println("..completed!");
+			System.out.print("Computing the vector..");
+			vectorizer.submitImageVectorizationTask(queryId, image);
+			ImageVectorizationResult result = vectorizer.getImageVectorizationResultWait();
+			double[] vector = result.getImageVector();
+			System.out.println("Query vector: " + Arrays.toString(Arrays.copyOf(vector, 10)));
+			System.out.println("..completed!");
 
-		System.out.print("Computing neighbors..");
-		Answer ans = ivfpq.computeNearestNeighbors(numNeighbors, vector);
-		System.out.println("..completed!");
+			System.out.print("Computing neighbors..");
+			Answer ans = ivfpq.computeNearestNeighbors(30, vector);
+			System.out.println("..completed!");
 
-		double searchTime = (double) ans.getIndexSearchTime() / 1000000.0;
-		double lookupTime = (double) ans.getNameLookupTime() / 1000000.0;
-		System.out.println("Search time: " + searchTime + " ms");
-		System.out.println("Lookup time: " + lookupTime + " ms");
+			double searchTime = (double) ans.getIndexSearchTime() / 1000000.0;
+			double lookupTime = (double) ans.getNameLookupTime() / 1000000.0;
+			System.out.println("Search time: " + searchTime + " ms");
+			System.out.println("Lookup time: " + lookupTime + " ms");
+			totalSearchTime += searchTime;
+			totalLookupTime += lookupTime;
 
-		Result[] results = ans.getResults();
-		for (int i = 0; i < results.length; i++) {
-			String resultUrl = decodeUrl(results[i].getExternalId());
-			System.out.println(resultUrl + " " + results[i].getDistance());
-			try {// downloading the image
-				String qid = "nn_" + i;
-				imd = new ImageDownload(resultUrl, qid, downloadFolder, false, true, false);
-				System.out.print("Downloading result image..");
-				imd.downloadImage();
-				System.out.println("..completed!");
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
+			Result[] results = ans.getResults();
+			for (int i = 0; i < results.length; i++) {
+				String resultUrl = decodeUrl(results[i].getExternalId());
+				System.out.println(resultUrl + " " + results[i].getDistance());
+				try {// downloading the image
+					String id = queryId + "_nn_" + i;
+					imd = new ImageDownload(resultUrl, id, downloadFolder, false, true, false);
+					System.out.print("Downloading result image..");
+					imd.downloadImage();
+					System.out.println("..completed!");
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				}
 			}
 		}
 
+		System.out.println("Average search time: " + (double) totalSearchTime / queryCounter + " ms");
+		System.out.println("Average lookup time: " + (double) totalLookupTime / queryCounter + " ms");
+
+		vectorizer.shutDown();
+		in.close();
+
 	}
-
-	/**
-	 * Number of nearest neighbors to return.
-	 */
-	public static final int numNeighbors = 10;
-	/**
-	 * The query image is downscaled to this maximum size (in pixels) if larger.
-	 */
-	public static final int maxSizeInPixels = 640 * 480;
-
-	/**
-	 * Number of list to be searched out of 8192.
-	 */
-	public static final int w = 10;
 
 	/**
 	 * This method is used to compile the Flickr URL from its parts.

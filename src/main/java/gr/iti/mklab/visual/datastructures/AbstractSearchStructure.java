@@ -41,7 +41,7 @@ public abstract class AbstractSearchStructure {
 	/**
 	 * The total memory to be used by the BDB, 512Mb by default. Larger values will allow faster id lookup.
 	 */
-	protected final long cacheSize = 1024 * 1024 * 512;
+	protected long cacheSize = 1024 * 1024 * 512;
 
 	/**
 	 * Whether the environment will be transactional. If true, ensures that the dbs will not be corrupted. <br>
@@ -175,6 +175,37 @@ public abstract class AbstractSearchStructure {
 		this.readOnly = readOnly;
 		this.countSizeOnLoad = countSizeOnLoad;
 		this.loadIndexInMemory = loadIndexInMemory;
+	}
+
+	/**
+	 * Constructor. Used when we want to avoid counting the database size and to use a preset value for the
+	 * load counter.
+	 * 
+	 * @param vectorLength
+	 *            The dimensionality of the VLAD vectors being indexed
+	 * @param maxNumVectors
+	 *            The maximum allowable size (number of vectors) of the index
+	 * @param readOnly
+	 *            If true the persistent store will opened only for read access (allows multiple opens)
+	 * @param countSizeOnLoad
+	 *            Whether the load counter will be initialized by the size of the persistent store
+	 * @param loadCounter
+	 *            The initial value of the load counter
+	 * @param loadIndexInMemory
+	 *            Whether to load the index in memory, we can avoid loading the index in memory when we only
+	 *            want to perform indexing
+	 * @param cacheSize
+	 *            The size of the cache in Megabytes
+	 */
+	protected AbstractSearchStructure(int vectorLength, int maxNumVectors, boolean readOnly,
+			boolean countSizeOnLoad, int loadCounter, boolean loadIndexInMemory, long cachesize) {
+		this.vectorLength = vectorLength;
+		this.loadCounter = loadCounter;
+		this.maxNumVectors = maxNumVectors;
+		this.readOnly = readOnly;
+		this.countSizeOnLoad = countSizeOnLoad;
+		this.loadIndexInMemory = loadIndexInMemory;
+		this.cacheSize = cachesize * 1024 * 1024;
 	}
 
 	/**

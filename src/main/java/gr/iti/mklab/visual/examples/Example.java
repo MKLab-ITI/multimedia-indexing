@@ -90,7 +90,7 @@ public class Example {
 
 		// this is the cheaper IVFPQ index and is loaded in memory
 		IVFPQ ivfpq_1 = new IVFPQ(targetLength2, maximumNumVectors, false, ivfpqIndexFolder, m2, k_c,
-				PQ.TransformationType.RandomPermutation, numCoarseCentroids, true, 0, true);
+				PQ.TransformationType.RandomPermutation, numCoarseCentroids, true, 0, true, 512);
 		ivfpq_1.loadCoarseQuantizer(coarseQuantizerFile2);
 		ivfpq_1.loadProductQuantizer(productQuantizerFile2);
 		int w = 64; // larger values will improve results/increase seach time

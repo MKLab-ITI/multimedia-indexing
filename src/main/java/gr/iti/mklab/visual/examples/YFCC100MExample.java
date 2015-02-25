@@ -13,6 +13,8 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
 
 /**
@@ -106,16 +108,36 @@ public class YFCC100MExample {
 		vectorizer.setMaxImageSizeInPixels(640 * 480);
 		System.out.println("..completed!");
 
+		String downloadFolder = "results_" + maxNumVectors + "_w=" + w + "/";
+		// create the downloads folder it it does not exist
+		File theDir = new File(downloadFolder);
+		// if the directory does not exist, create it
+		if (!theDir.exists()) {
+			System.out.println("creating directory to save query and result images: " + downloadFolder);
+			boolean result = false;
+
+			try {
+				theDir.mkdir();
+				result = true;
+			} catch (SecurityException se) {
+				// handle it
+			}
+			if (result) {
+				System.out.println("DIR created");
+			}
+		}
+
 		// opening the URLs file for reading
 		BufferedReader in = new BufferedReader(new FileReader(new File(urlFile)));
 		String url;
 		int totalSearchTime = 0;
 		int totalLookupTime = 0;
+		int totalQueryCpuTime = 0;
 		int queryCounter = 0;
+
 		while ((url = in.readLine()) != null) {
 			queryCounter++;
 			String queryId = "query_image_" + queryCounter; // a dummy id is given
-			String downloadFolder = "";
 			ImageDownload imd = new ImageDownload(url.replace(" ", "%20"), queryId, downloadFolder, false,
 					true, false);
 			System.out.print("Downloading the image..");
@@ -130,15 +152,21 @@ public class YFCC100MExample {
 			System.out.println("..completed!");
 
 			System.out.print("Computing neighbors..");
+			long start = getCpuTime();
 			Answer ans = ivfpq.computeNearestNeighbors(30, vector);
+			long end = getCpuTime();
+			long queryCpuTime = end - start;
 			System.out.println("..completed!");
 
 			double searchTime = (double) ans.getIndexSearchTime() / 1000000.0;
 			double lookupTime = (double) ans.getNameLookupTime() / 1000000.0;
 			System.out.println("Search time: " + searchTime + " ms");
 			System.out.println("Lookup time: " + lookupTime + " ms");
+			System.out.println("Total query cpu time: " + queryCpuTime + " ms");
+
 			totalSearchTime += searchTime;
 			totalLookupTime += lookupTime;
+			totalQueryCpuTime += queryCpuTime;
 
 			Result[] results = ans.getResults();
 			for (int i = 0; i < results.length; i++) {
@@ -158,6 +186,8 @@ public class YFCC100MExample {
 
 		System.out.println("Average search time: " + (double) totalSearchTime / queryCounter + " ms");
 		System.out.println("Average lookup time: " + (double) totalLookupTime / queryCounter + " ms");
+		System.out.println("Average total query cpu time: " + (double) totalQueryCpuTime / queryCounter
+				+ " ms");
 
 		vectorizer.shutDown();
 		in.close();
@@ -183,5 +213,12 @@ public class YFCC100MExample {
 		String url = "https://farm" + farmId + ".staticflickr.com/" + serverId + "/" + identidier + "_"
 				+ secret + "_" + imageSize + ".jpg";
 		return url;
+	}
+
+	/** Get CPU time in milliseconds. */
+	public static long getCpuTime() {
+		ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+		return bean.isCurrentThreadCpuTimeSupported() ? (long) ((double) bean.getCurrentThreadCpuTime() / 1000000.0)
+				: 0L;
 	}
 }

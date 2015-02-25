@@ -44,20 +44,20 @@ public class YFCC100MExample {
 	 * </ul>
 	 * 
 	 * Depending on the number of images that are loaded, a sufficient amount of memory should be allocated
-	 * using the -Xmx command (use -Xmx12g to load the full collection).
+	 * using the -Xmx command (use -Xmx16g to load the full collection).
 	 * 
 	 * @param args
 	 *            [0] Path to the folder where the IVFPQ index resides
 	 * @param args
 	 *            [1] Number of images (i.e. vectors) to load. This number should be equal or smaller to the
-	 *            total size of the index (~100M).
+	 *            total size of the index (95213780).
 	 * @param args
 	 *            [2] Path to the folder where the learning files reside
 	 * @param args
 	 *            [3] Path to a file that contains the URLs of the query images, one per row.
 	 * @param args
 	 *            [4] Number of coarse quantizer lists to be searched out of 8192. Use a small number (1 or 2)
-	 *            if the whole collection is loaded.
+	 *            if the whole collection is loaded to obtain query times less than 1 sec.
 	 * @param args
 	 *            [5] The size of the cache in Megabytes (use 1024 or 2048).
 	 * @throws Exception

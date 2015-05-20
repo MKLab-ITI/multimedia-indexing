@@ -108,7 +108,7 @@ public class Example {
 			System.out.println(vector.length);
 
 			Answer r = ivfpq_1.computeNearestNeighbors(100, vector);
-			System.out.println(r.getResults().length);
+			System.out.println(r.getIds().length);
 		}
 		// IVFPQ ivfpq_2 = new IVFPQ(targetLength, maximumNumVectors, false, ivfpqIndex1Folder, m2, k_c,
 		// PQ.TransformationType.RandomPermutation, numCoarseCentroids, true, 0);

@@ -5,7 +5,6 @@ import gr.iti.mklab.visual.datastructures.IVFPQ;
 import gr.iti.mklab.visual.datastructures.PQ;
 import gr.iti.mklab.visual.datastructures.PQ.TransformationType;
 import gr.iti.mklab.visual.utilities.Answer;
-import gr.iti.mklab.visual.utilities.Result;
 import gr.iti.mklab.visual.vectorization.ImageVectorizationResult;
 import gr.iti.mklab.visual.vectorization.ImageVectorizer;
 
@@ -168,10 +167,11 @@ public class YFCC100MExample {
 			totalLookupTime += lookupTime;
 			totalQueryCpuTime += queryCpuTime;
 
-			Result[] results = ans.getResults();
-			for (int i = 0; i < results.length; i++) {
-				String resultUrl = decodeUrl(results[i].getExternalId());
-				System.out.println(resultUrl + " " + results[i].getDistance());
+			String[] resultUrls = ans.getIds();
+			double[] distances = ans.getDistances();
+			for (int i = 0; i < resultUrls.length; i++) {
+				String resultUrl = decodeUrl(resultUrls[i]);
+				System.out.println(resultUrl + " " + distances[i]);
 				try {// downloading the image
 					String id = queryId + "_nn_" + i;
 					imd = new ImageDownload(resultUrl, id, downloadFolder, false, true, false);

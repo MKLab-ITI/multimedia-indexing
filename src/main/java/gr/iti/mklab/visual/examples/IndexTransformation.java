@@ -95,7 +95,7 @@ public class IndexTransformation {
 			if (transfomationType.equals("pq")) {// pq
 				// === re-index to an PQ index ===
 				toIndex = new PQ(targetVectorLength, maxNumIndexedVectors, false, targetIndexFolder, m, k_s,
-						transformation);
+						transformation, 512);
 				((PQ) toIndex).loadProductQuantizer(productQuantizerFile);
 			} else { // ivfpq
 				String coarseQuantizerFile = args[10];
@@ -120,5 +120,7 @@ public class IndexTransformation {
 			}
 			toIndex.indexVector(id, newVector);
 		}
+
+		toIndex.close();
 	}
 }

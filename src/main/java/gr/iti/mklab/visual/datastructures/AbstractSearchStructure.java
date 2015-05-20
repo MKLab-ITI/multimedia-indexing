@@ -281,30 +281,8 @@ public abstract class AbstractSearchStructure {
 		BoundedPriorityQueue<Result> nnQueue = computeNearestNeighborsInternal(k, queryVector);
 		long indexSearchTime = System.nanoTime() - start;
 
-		Result[] nn = new Result[nnQueue.size()];
-		nn = nnQueue.toArray(nn);
+		return lookUp(nnQueue, indexSearchTime);
 
-		start = System.nanoTime();
-		for (int i = 0; i < nn.length; i++) { // attach external ids to the results
-			int iid = nn[i].getInternalId();
-			String id = getId(iid);
-			nn[i].setExternalId(id);
-		}
-		long nameLookupTime = System.nanoTime() - start;
-
-		if (!useMetaData) {
-			return new Answer(nn, nameLookupTime, indexSearchTime);
-		} else {
-			start = System.nanoTime();
-			LatLng[] geolocations = new LatLng[nn.length];
-			for (int i = 0; i < nn.length; i++) { // attach external ids to the results
-				int iid = nn[i].getInternalId();
-				geolocations[i] = getGeolocation(iid);
-			}
-			long geolocationLookupTime = System.nanoTime() - start;
-			return new AnswerWithGeolocation(nn, geolocations, nameLookupTime, indexSearchTime,
-					geolocationLookupTime);
-		}
 	}
 
 	/**
@@ -341,30 +319,7 @@ public abstract class AbstractSearchStructure {
 		BoundedPriorityQueue<Result> nnQueue = computeNearestNeighborsInternal(k, internalIdQuery);
 		long indexSearchTime = System.nanoTime() - start;
 
-		Result[] nn = new Result[nnQueue.size()];
-		nn = nnQueue.toArray(nn);
-
-		start = System.nanoTime();
-		for (int i = 0; i < nn.length; i++) { // attach external ids to the results
-			int iid = nn[i].getInternalId();
-			String id = getId(iid);
-			nn[i].setExternalId(id);
-		}
-		long nameLookupTime = System.nanoTime() - start;
-
-		if (!useMetaData) {
-			return new Answer(nn, nameLookupTime, indexSearchTime);
-		} else {
-			start = System.nanoTime();
-			LatLng[] geolocations = new LatLng[nn.length];
-			for (int i = 0; i < nn.length; i++) { // attach external ids to the results
-				int iid = nn[i].getInternalId();
-				geolocations[i] = getGeolocation(iid);
-			}
-			long geolocationLookupTime = System.nanoTime() - start;
-			return new AnswerWithGeolocation(nn, geolocations, nameLookupTime, indexSearchTime,
-					geolocationLookupTime);
-		}
+		return lookUp(nnQueue, indexSearchTime);
 	}
 
 	/**
@@ -381,6 +336,36 @@ public abstract class AbstractSearchStructure {
 	 */
 	protected abstract BoundedPriorityQueue<Result> computeNearestNeighborsInternal(int k, int iid)
 			throws Exception;
+
+	private Answer lookUp(BoundedPriorityQueue<Result> nnQueue, long indexSearchTime) {
+		Result[] nn = new Result[nnQueue.size()];
+		nn = nnQueue.toArray(nn);
+
+		String[] ids = new String[nnQueue.size()];
+		double[] distances = new double[nnQueue.size()];
+
+		long start = System.nanoTime();
+		for (int i = 0; i < nn.length; i++) { // attach external ids to the results
+			distances[i] = nn[i].getDistance();
+			int iid = nn[i].getId();
+			ids[i] = getId(iid);
+		}
+		long nameLookUpTime = System.nanoTime() - start;
+
+		if (!useMetaData) {
+			return new Answer(ids, distances, nameLookUpTime, indexSearchTime);
+		} else {
+			start = System.nanoTime();
+			LatLng[] geolocations = new LatLng[nn.length];
+			for (int i = 0; i < nn.length; i++) { // attach external ids to the results
+				int iid = nn[i].getId();
+				geolocations[i] = getGeolocation(iid);
+			}
+			long geolocationLookupTime = System.nanoTime() - start;
+			return new AnswerWithGeolocation(ids, distances, geolocations, nameLookUpTime, indexSearchTime,
+					geolocationLookupTime);
+		}
+	}
 
 	/**
 	 * Returns the internal id assigned to the vector with the given id or -1 if the id is not found. Accesses

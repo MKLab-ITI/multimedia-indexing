@@ -19,8 +19,9 @@ public class AnswerWithGeolocation extends Answer {
 	 */
 	private long geolocationLookupTime;
 
-	public AnswerWithGeolocation(Result[] results, LatLng[] geolocations, long nameLookupTime, long indexSearchTime, long geolocationLookupTime) {
-		super(results, nameLookupTime, indexSearchTime);
+	public AnswerWithGeolocation(String[] ids, double[] distances, LatLng[] geolocations,
+			long nameLookupTime, long indexSearchTime, long geolocationLookupTime) {
+		super(ids, distances, nameLookupTime, indexSearchTime);
 		this.geolocations = geolocations;
 		this.geolocationLookupTime = geolocationLookupTime;
 	}

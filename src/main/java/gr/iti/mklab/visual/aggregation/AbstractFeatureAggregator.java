@@ -214,7 +214,7 @@ public abstract class AbstractFeatureAggregator {
 		}
 		int[] nn = new int[k];
 		for (int i = 0; i < k; i++) {
-			nn[i] = bpq.poll().getInternalId();
+			nn[i] = bpq.poll().getId();
 		}
 		return nn;
 	}

@@ -1,7 +1,6 @@
 package gr.iti.mklab.visual.datastructures;
 
 import gnu.trove.list.array.TByteArrayList;
-import gnu.trove.list.array.TDoubleArrayList;
 import gnu.trove.list.array.TShortArrayList;
 import gr.iti.mklab.visual.utilities.RandomPermutation;
 import gr.iti.mklab.visual.utilities.RandomRotation;
@@ -39,17 +38,17 @@ public class PQ extends AbstractSearchStructure {
 	/**
 	 * BDB store for persistent storage of the ADC index.
 	 */
-	private Database iidToPqDB;
+	protected Database iidToPqDB;
 
 	/**
 	 * The number of sub-vectors.
 	 */
-	private int numSubVectors;
+	protected int numSubVectors;
 
 	/**
 	 * The length of each subvector (= vectorLength/numSubVectors).
 	 */
-	private int subVectorLength;
+	protected int subVectorLength;
 
 	/**
 	 * The number of centroids used to quantize each sub-vector. (Depending on this number we use a different
@@ -57,7 +56,7 @@ public class PQ extends AbstractSearchStructure {
 	 * bits per subvector), for k>256 we use a short (16 bits per subvector).
 	 * 
 	 */
-	private int numProductCentroids;
+	protected int numProductCentroids;
 
 	/**
 	 * The product-quantization codes for all vectors are stored in this list if the code can fit in the byte
@@ -79,7 +78,7 @@ public class PQ extends AbstractSearchStructure {
 	 * 1..numProductCentroids and indexes the centroids of each sub-quantizer of the product quantizer. The
 	 * third dimension goes from 1...subVectorLength and indexes the components of each centroid.
 	 */
-	private double[][][] productQuantizer;
+	protected double[][][] productQuantizer;
 
 	/**
 	 * The supported transformation types.
@@ -142,8 +141,9 @@ public class PQ extends AbstractSearchStructure {
 	 */
 	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
 			int numProductCentroids, TransformationType transformation, boolean countSizeOnLoad,
-			int loadCounter, boolean loadIndexInMemory) throws Exception {
-		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory);
+			int loadCounter, boolean loadIndexInMemory, long cacheSize) throws Exception {
+		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory,
+				cacheSize);
 		this.numSubVectors = numSubVectors;
 		if (vectorLength % numSubVectors > 0) {
 			throw new Exception("The given number of subvectors is not valid!");
@@ -167,14 +167,8 @@ public class PQ extends AbstractSearchStructure {
 		dbConf.setAllowCreate(true); // db will be created if it does not exist
 		iidToPqDB = dbEnv.openDatabase(null, "adc", dbConf); // create/open the db using config
 
-		if (loadIndexInMemory) {// load the existing persistent index in memory
-			// create the memory objects with the appropriate initial size
-			if (numProductCentroids <= 256) {
-				pqByteCodes = new TByteArrayList(maxNumVectors * numSubVectors);
-			} else {
-				pqShortCodes = new TShortArrayList(maxNumVectors * numSubVectors);
-			}
-			// load any existing persistent index in memory
+		if (loadIndexInMemory) {
+			// initialize the in-memory data structures and load any existing persistent index in memory
 			loadIndexInMemory();
 		}
 	}
@@ -196,12 +190,14 @@ public class PQ extends AbstractSearchStructure {
 	 *            The number of centroids used to quantize each sub-vector
 	 * @param transformation
 	 *            The type of transformation to perform on each vector
+	 * @param cacheSize
+	 *            the size of the cache in Megabytes
 	 * @throws Exception
 	 */
 	public PQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
-			int numProductCentroids, TransformationType transformation) throws Exception {
+			int numProductCentroids, TransformationType transformation, long cacheSize) throws Exception {
 		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
-				transformation, true, 0, true);
+				transformation, true, 0, true, cacheSize);
 	}
 
 	/**
@@ -438,6 +434,12 @@ public class PQ extends AbstractSearchStructure {
 	 * @throws Exception
 	 */
 	private void loadIndexInMemory() throws Exception {
+		// create the memory objects with the appropriate initial size
+		if (numProductCentroids <= 256) {
+			pqByteCodes = new TByteArrayList(maxNumVectors * numSubVectors);
+		} else {
+			pqShortCodes = new TShortArrayList(maxNumVectors * numSubVectors);
+		}
 		long start = System.currentTimeMillis();
 		System.out.println("Loading persistent index in memory.");
 

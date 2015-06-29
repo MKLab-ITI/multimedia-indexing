@@ -84,7 +84,8 @@ public class CodebookLearning {
 		}
 
 		String outFilename = filepath + "_codebook-" + data.numAttributes() + "A-" + numClusters + "C-"
-				+ maxIterations + "I-" + seed + "S" + "_" + normalization + ".csv";
+				+ maxIterations + "I-" + seed + "S" + "_" + normalization + System.currentTimeMillis()
+				+ ".csv";
 		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed,
 				numSlots, kMeansPlusPlus);
 	}

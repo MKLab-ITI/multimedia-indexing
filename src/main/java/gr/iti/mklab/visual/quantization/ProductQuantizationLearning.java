@@ -18,10 +18,12 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
 import weka.clusterers.AbstractClusterer;
+import weka.clusterers.SimpleKMeans;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 
 /**
  * This class is used to learn a Product Quantizer from a set of vectors that are stored in a {@link Linear}
@@ -245,12 +247,13 @@ public class ProductQuantizationLearning {
 		for (int i = 0; i < m; i++) {
 			System.out.println("Learning sub-quantizer " + (i + 1));
 			double minSSE = Double.MAX_VALUE;
-			SimpleKMeansWithOutput bestClusterer = null;
+			SimpleKMeans bestClusterer = null;
 			// try k-mean using numKmeansRepeats different random seeds and keep the one with lowest SSE
 			for (int j = 0; j < numKmeansRepeats; j++) {
 				// Create a new k-means instance
-				SimpleKMeansWithOutput clusterer = new SimpleKMeansWithOutput();
-				clusterer.setInitializeUsingKMeansPlusPlusMethod(true);
+				SimpleKMeans clusterer = new SimpleKMeans();
+				clusterer.setInitializationMethod(new SelectedTag(SimpleKMeans.KMEANS_PLUS_PLUS,
+						SimpleKMeans.TAGS_SELECTION));
 				clusterer.setNumExecutionSlots(numSlots);
 				clusterer.setNumClusters(numProductCentroids);
 				clusterer.setMaxIterations(maxIterations);
@@ -261,7 +264,7 @@ public class ProductQuantizationLearning {
 				double SSE = clusterer.getSquaredError();
 				if (SSE < minSSE) {
 					minSSE = SSE;
-					bestClusterer = (SimpleKMeansWithOutput) AbstractClusterer.makeCopy(clusterer);
+					bestClusterer = (SimpleKMeans) AbstractClusterer.makeCopy(clusterer);
 				}
 			}
 

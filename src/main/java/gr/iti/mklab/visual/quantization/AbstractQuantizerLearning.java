@@ -4,15 +4,17 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 
+import weka.clusterers.SimpleKMeans;
 import weka.core.Instance;
 import weka.core.Instances;
+import weka.core.SelectedTag;
 
 /**
  * This class contains a static method than learns a k-means quantizer using a slightly modified (to produce
  * some additional output) version of Weka's SimpleKMeans class and writes the learned quantizer to a file. It
  * supports parallel execution!
  * 
- * @author Eleftherios Spyromitros-Xioufiss
+ * @author Eleftherios Spyromitros-Xioufis
  */
 public class AbstractQuantizerLearning {
 
@@ -45,16 +47,21 @@ public class AbstractQuantizerLearning {
 
 		System.out.println("Clustering started");
 		long start = System.currentTimeMillis();
-		// create a new instance for the Clusterer
-		SimpleKMeansWithOutput clusterer = new SimpleKMeansWithOutput();
-		clusterer.setInitializeUsingKMeansPlusPlusMethod(kMeansPlusPlus);
+		// create a new Clusterer and initialize appropriately
+		SimpleKMeans clusterer = new SimpleKMeans();
+		if (kMeansPlusPlus) {
+			clusterer.setInitializationMethod(new SelectedTag(SimpleKMeans.KMEANS_PLUS_PLUS,
+					SimpleKMeans.TAGS_SELECTION));
+		}
+		clusterer.setDebug(true);
 		clusterer.setSeed(seed);
 		clusterer.setNumClusters(numClusters);
 		clusterer.setMaxIterations(maxIterations);
 		clusterer.setNumExecutionSlots(numSlots);
-		clusterer.setFastDistanceCalc(false);
+		clusterer.setFastDistanceCalc(true);
 		// build the clusterer
 		clusterer.buildClusterer(data);
+		// System.out.println("Clusterer:\n" + clusterer.toString());
 		long end = System.currentTimeMillis();
 		System.out.println("Clustering completed in " + (end - start) + " ms");
 

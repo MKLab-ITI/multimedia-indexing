@@ -1,17 +1,10 @@
 package gr.iti.mklab.visual.datastructures;
 
-import gnu.trove.list.array.TByteArrayList;
-import gnu.trove.list.array.TIntArrayList;
-import gnu.trove.list.array.TShortArrayList;
-import gr.iti.mklab.visual.aggregation.AbstractFeatureAggregator;
-import gr.iti.mklab.visual.datastructures.PQ.TransformationType;
-import gr.iti.mklab.visual.utilities.RandomPermutation;
-import gr.iti.mklab.visual.utilities.RandomRotation;
-import gr.iti.mklab.visual.utilities.Result;
-
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
@@ -28,6 +21,15 @@ import com.sleepycat.je.DiskOrderedCursorConfig;
 import com.sleepycat.je.ForwardCursor;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
+
+import gnu.trove.list.array.TByteArrayList;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.list.array.TShortArrayList;
+import gr.iti.mklab.visual.aggregation.AbstractFeatureAggregator;
+import gr.iti.mklab.visual.datastructures.PQ.TransformationType;
+import gr.iti.mklab.visual.utilities.RandomPermutation;
+import gr.iti.mklab.visual.utilities.RandomRotation;
+import gr.iti.mklab.visual.utilities.Result;
 
 /**
  * This class implements indexing and non-exhaustive approximate nearest neighbor search using the combination
@@ -74,21 +76,6 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * byte range.
 	 */
 	private TShortArrayList[] pqShortCodes;
-
-	public int getInvertedListSize(int listIndex) {
-		return invertedLists[listIndex].size();
-	}
-
-	public byte[] getPQCode(int listId, int index) {
-		int codeStart = index * numSubVectors;
-		byte[] pqCode = pqByteCodes[listId].toArray(codeStart, numSubVectors);
-		return pqCode;
-	}
-
-	public int getIid(int listId, int index) {
-		int iid = invertedLists[listId].getQuick(index);
-		return iid;
-	}
 
 	/**
 	 * The inverted lists containing the internal ids of the vectors qunatized in each list.
@@ -187,7 +174,7 @@ public class IVFPQ extends AbstractSearchStructure {
 	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
 			int numProductCentroids, TransformationType transformation, int numCoarseCentroids,
 			boolean countSizeOnLoad, int loadCounter, boolean loadIndexInMemory, long cacheSize)
-			throws Exception {
+					throws Exception {
 		super(vectorLength, maxNumVectors, readOnly, countSizeOnLoad, loadCounter, loadIndexInMemory,
 				cacheSize);
 		this.numSubVectors = numSubVectors;
@@ -230,12 +217,13 @@ public class IVFPQ extends AbstractSearchStructure {
 
 			for (int i = 0; i < numCoarseCentroids; i++) {
 				if (numProductCentroids <= 256) {
+					// fixed initial size allows space efficiency measurements
 					// pqByteCodes[i] = new TByteArrayList(initialListCapacity * numSubVectors);
 					pqByteCodes[i] = new TByteArrayList();
 
 				} else {
-					// fixed initial size for each list, allows space efficiency measurements
-					pqShortCodes[i] = new TShortArrayList(initialListCapacity * numSubVectors);
+					// fixed initial size allows space efficiency measurements
+					// pqShortCodes[i] = new TShortArrayList(initialListCapacity * numSubVectors);
 					pqShortCodes[i] = new TShortArrayList();
 
 				}
@@ -271,8 +259,8 @@ public class IVFPQ extends AbstractSearchStructure {
 	 * @throws Exception
 	 */
 	public IVFPQ(int vectorLength, int maxNumVectors, boolean readOnly, String BDBEnvHome, int numSubVectors,
-			int numProductCentroids, TransformationType transformation, int numCoarseCentroids, long cacheSize)
-			throws Exception {
+			int numProductCentroids, TransformationType transformation, int numCoarseCentroids,
+			long cacheSize) throws Exception {
 		this(vectorLength, maxNumVectors, readOnly, BDBEnvHome, numSubVectors, numProductCentroids,
 				transformation, numCoarseCentroids, true, 0, true, cacheSize);
 	}
@@ -368,7 +356,8 @@ public class IVFPQ extends AbstractSearchStructure {
 
 	public synchronized boolean indexPQCode(String id, int listId, byte[] code) throws Exception {
 		if (numProductCentroids > 256) {
-			throw new Exception("Byte is not sufficient to enumerate the centroids of the product quantizer!");
+			throw new Exception(
+					"Byte is not sufficient to enumerate the centroids of the product quantizer!");
 		}
 		// check if we can index more vectors
 		if (loadCounter >= maxNumVectors) {
@@ -458,6 +447,53 @@ public class IVFPQ extends AbstractSearchStructure {
 		}
 
 		return nn;
+	}
+
+	/**
+	 * Utility methods that computes the distance between a query vector and the pq code associated with the
+	 * given id using the IVFADC approach. <br>
+	 * TODO: The computation of the lookUpTable is not needed in this case.
+	 * 
+	 * @param qVector
+	 *            The query vector
+	 * @param existingVecId
+	 *            The id of an already indexed vector
+	 * @return
+	 * @throws Exception
+	 */
+	public double computeDistanceIVFADC(double[] qVector, String existingVecId) throws Exception {
+		double distance = 0;
+		// find the coarse centroid where the specified id is quantized as well as its pq code
+		int existingCoarseCentroidIndex = getInvertedListId(existingVecId);
+
+		// quantize the given vector to the centroid of the coarse quantizer where the existing vector is
+		// quantized and compute the residual vector
+		double[] residualVectorQuery = computeResidualVector(qVector, existingCoarseCentroidIndex);
+
+		// apply a random transformation if needed
+		if (transformation == TransformationType.RandomRotation) {
+			residualVectorQuery = rr.rotate(residualVectorQuery);
+		} else if (transformation == TransformationType.RandomPermutation) {
+			residualVectorQuery = rp.permute(residualVectorQuery);
+		}
+
+		// compute lookup table
+		double[][] lookUpTable = computeLookupADC(residualVectorQuery);
+
+		if (numProductCentroids <= 256) {
+			byte[] pqCode = getPQCodeByte(existingVecId);
+			for (int m = 0; m < pqCode.length; m++) {
+				// plus 128 because byte range is -128..127
+				distance += lookUpTable[m][pqCode[m] + 128];
+			}
+		} else {
+			short[] pqCode = getPQCodeShort(existingVecId);
+			for (int m = 0; m < pqCode.length; m++) {
+				distance += lookUpTable[m][pqCode[m]];
+			}
+		}
+
+		return distance;
 	}
 
 	/**
@@ -611,14 +647,16 @@ public class IVFPQ extends AbstractSearchStructure {
 		return residualVector;
 	}
 
+	/**
+	 * Utility method that calculates and prints the min, max and avg number of items per inverted list of the
+	 * index.
+	 */
 	public void outputItemsPerList() {
-		// find the max value
 		int max = 0;
 		int min = Integer.MAX_VALUE;
 		double sum = 0;
 		for (int i = 0; i < numCoarseCentroids; i++) {
-			// System.out.println("List " + (i + 1) + ": " +
-			// perListLoadCounter[i]);
+			// System.out.println("List " + (i + 1) + ": " + perListLoadCounter[i]);
 			if (invertedLists[i].size() > max) {
 				max = invertedLists[i].size();
 			}
@@ -659,7 +697,12 @@ public class IVFPQ extends AbstractSearchStructure {
 				&& counter < maxNumVectors) {
 			TupleInput input = TupleBinding.entryToInput(foundData);
 			int listId = input.readInt();
-			invertedLists[listId].add(counter); // update ram based index
+			// The following code assumes that internal ids are consequtive (as they should be).
+			// It is possible, however, tha an indexed with non-consequtive ids was constructed.
+			// invertedLists[listId].add(counter); // update ram based index
+			// The following code works for non-consequitve internal ids as well.
+			int iid = IntegerBinding.entryToInt(foundKey);
+			invertedLists[listId].add(iid); // update ram based index
 
 			if (numProductCentroids <= 256) {
 				byte[] code = new byte[numSubVectors];
@@ -682,6 +725,30 @@ public class IVFPQ extends AbstractSearchStructure {
 		cursor.close();
 		long end = System.currentTimeMillis();
 		System.out.println(counter + " images loaded in " + (end - start) + " ms!");
+	}
+
+	/**
+	 * This is a utility method that can be used to dump the contents of the iidToIvfpqDB to a txt file.<br>
+	 * Currently, only the list id of each item is dumped.
+	 * 
+	 * @param dumpFilename
+	 *            Full path to the file where the dump will be written.
+	 * @throws Exception
+	 */
+	public void dumpIidToIvfpqDB(String dumpFilename) throws Exception {
+		DatabaseEntry foundKey = new DatabaseEntry();
+		DatabaseEntry foundData = new DatabaseEntry();
+
+		ForwardCursor cursor = iidToIvfpqDB.openCursor(null, null);
+		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dumpFilename)));
+		while (cursor.getNext(foundKey, foundData, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+			int iid = IntegerBinding.entryToInt(foundKey);
+			TupleInput input = TupleBinding.entryToInput(foundData);
+			int listId = input.readInt();
+			out.write(iid + " " + listId + "\n");
+		}
+		cursor.close();
+		out.close();
 	}
 
 	/**
@@ -722,6 +789,95 @@ public class IVFPQ extends AbstractSearchStructure {
 		DatabaseEntry key = new DatabaseEntry();
 		IntegerBinding.intToEntry(loadCounter, key);
 		iidToIvfpqDB.put(null, key, data);
+	}
+
+	/**
+	 * Returns the pq code of the image with the given id.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public byte[] getPQCodeByte(String id) throws Exception {
+		int iid = getInternalId(id);
+		if (iid == -1) {
+			throw new Exception("Id does not exist!");
+		}
+		if (numProductCentroids > 256) {
+			throw new Exception("Call the short variant of the method!");
+		}
+
+		DatabaseEntry key = new DatabaseEntry();
+		IntegerBinding.intToEntry(iid, key);
+		DatabaseEntry data = new DatabaseEntry();
+		if ((iidToIvfpqDB.get(null, key, data, null) == OperationStatus.SUCCESS)) {
+			TupleInput input = TupleBinding.entryToInput(data);
+			input.readInt(); // skip the list id
+			byte[] code = new byte[numSubVectors];
+			for (int i = 0; i < numSubVectors; i++) {
+				code[i] = input.readByte();
+			}
+			return code;
+		} else {
+			throw new Exception("Id does not exist!");
+		}
+	}
+
+	/**
+	 * Returns the pq code of the image with the given id.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public short[] getPQCodeShort(String id) throws Exception {
+		int iid = getInternalId(id);
+		if (iid == -1) {
+			throw new Exception("Id does not exist!");
+		}
+		if (numProductCentroids <= 256) {
+			throw new Exception("Call the short variant of the method!");
+		}
+
+		DatabaseEntry key = new DatabaseEntry();
+		IntegerBinding.intToEntry(iid, key);
+		DatabaseEntry data = new DatabaseEntry();
+		if ((iidToIvfpqDB.get(null, key, data, null) == OperationStatus.SUCCESS)) {
+			TupleInput input = TupleBinding.entryToInput(data);
+			input.readInt(); // skip the list id
+			short[] code = new short[numSubVectors];
+			for (int i = 0; i < numSubVectors; i++) {
+				code[i] = input.readShort();
+			}
+			return code;
+		} else {
+			throw new Exception("Id does not exist!");
+		}
+	}
+
+	/**
+	 * Returns the inverted list of the image with the given id.
+	 * 
+	 * @param id
+	 * @return
+	 * @throws Exception
+	 */
+	public int getInvertedListId(String id) throws Exception {
+		int iid = getInternalId(id);
+		if (iid == -1) {
+			throw new Exception("Id does not exist!");
+		}
+
+		DatabaseEntry key = new DatabaseEntry();
+		IntegerBinding.intToEntry(iid, key);
+		DatabaseEntry data = new DatabaseEntry();
+		if ((iidToIvfpqDB.get(null, key, data, null) == OperationStatus.SUCCESS)) {
+			TupleInput input = TupleBinding.entryToInput(data);
+			int listId = input.readInt();
+			return listId;
+		} else {
+			throw new Exception("Id does not exist!");
+		}
 	}
 
 	@Override

@@ -1,11 +1,8 @@
 package gr.iti.mklab.visual.datastructures;
 
-import gr.iti.mklab.visual.utilities.Answer;
-import gr.iti.mklab.visual.utilities.AnswerWithGeolocation;
-import gr.iti.mklab.visual.utilities.MetaDataEntity;
-import gr.iti.mklab.visual.utilities.Result;
-
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.util.Date;
 import java.util.List;
 
@@ -22,10 +19,17 @@ import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.Environment;
 import com.sleepycat.je.EnvironmentConfig;
 import com.sleepycat.je.EnvironmentNotFoundException;
+import com.sleepycat.je.ForwardCursor;
+import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 import com.sleepycat.persist.EntityStore;
 import com.sleepycat.persist.PrimaryIndex;
 import com.sleepycat.persist.StoreConfig;
+
+import gr.iti.mklab.visual.utilities.Answer;
+import gr.iti.mklab.visual.utilities.AnswerWithGeolocation;
+import gr.iti.mklab.visual.utilities.MetaDataEntity;
+import gr.iti.mklab.visual.utilities.Result;
 
 /**
  * This class abstracts operations related to persistence and id lookup from the actual indexing structures.
@@ -44,7 +48,8 @@ public abstract class AbstractSearchStructure {
 	protected long cacheSize = 1024 * 1024 * 512;
 
 	/**
-	 * Whether the environment will be transactional. If true, ensures that the dbs will not be corrupted. <br>
+	 * Whether the environment will be transactional. If true, ensures that the dbs will not be corrupted.
+	 * <br>
 	 * For more information on what this means, refer to the BDB documentation.
 	 */
 	protected boolean transactional = false;
@@ -518,7 +523,8 @@ public abstract class AbstractSearchStructure {
 	}
 
 	/**
-	 * <b>{@link #getInternalId(String)} can always be called instead of this method at the same cost!</b> <br>
+	 * <b>{@link #getInternalId(String)} can always be called instead of this method at the same cost!</b>
+	 * <br>
 	 * Checks if the vector with the given id is already indexed. This method is useful to avoid re-indexing
 	 * the same vector. Its convention is that if the given name is already in idToIidBDB, then the vector is
 	 * indexed in all other structures e.g. iidToIdBDB. The rest of the checks are avoided for efficiency.
@@ -596,6 +602,28 @@ public abstract class AbstractSearchStructure {
 	}
 
 	/**
+	 * This is a utility method that can be used to dump the contents of the iidToIdDB to a txt file.
+	 * 
+	 * @param dumpFilename
+	 *            Full path to the file where the dump will be written.
+	 * @throws Exception
+	 */
+	public void dumpiidToIdDB(String dumpFilename) throws Exception {
+		DatabaseEntry foundKey = new DatabaseEntry();
+		DatabaseEntry foundData = new DatabaseEntry();
+
+		ForwardCursor cursor = iidToIdDB.openCursor(null, null);
+		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dumpFilename)));
+		while (cursor.getNext(foundKey, foundData, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+			int iid = IntegerBinding.entryToInt(foundKey);
+			String id = StringBinding.entryToString(foundData);
+			out.write(iid + " " + id + "\n");
+		}
+		cursor.close();
+		out.close();
+	}
+
+	/**
 	 * This method creates and/or opens the BDB environment in the supplied directory. <br>
 	 * TODO: The configuration can be tuned for being more efficient / less persistent!
 	 * 
@@ -666,8 +694,8 @@ public abstract class AbstractSearchStructure {
 	 * This method can be called to output indexing time measurements.
 	 */
 	public void outputIndexingTimes() {
-		System.out.println((double) totalInternalVectorIndexingTime / loadCounter
-				+ " ms => internal indexing time");
+		System.out.println(
+				(double) totalInternalVectorIndexingTime / loadCounter + " ms => internal indexing time");
 		System.out.println((double) totalIdMappingTime / loadCounter + " ms => id mapping time");
 		System.out.println((double) totalVectorIndexingTime / loadCounter + " ms => total indexing time");
 		outputIndexingTimesInternal();

@@ -624,6 +624,28 @@ public abstract class AbstractSearchStructure {
 	}
 
 	/**
+	 * This is a utility method that can be used to dump the contents of the idToIidDB to a txt file.
+	 * 
+	 * @param dumpFilename
+	 *            Full path to the file where the dump will be written.
+	 * @throws Exception
+	 */
+	public void dumpidToIidDB(String dumpFilename) throws Exception {
+		DatabaseEntry foundKey = new DatabaseEntry();
+		DatabaseEntry foundData = new DatabaseEntry();
+
+		ForwardCursor cursor = idToIidDB.openCursor(null, null);
+		BufferedWriter out = new BufferedWriter(new FileWriter(new File(dumpFilename)));
+		while (cursor.getNext(foundKey, foundData, LockMode.DEFAULT) == OperationStatus.SUCCESS) {
+			int iid = IntegerBinding.entryToInt(foundData);
+			String id = StringBinding.entryToString(foundKey);
+			out.write(id + " " + iid + "\n");
+		}
+		cursor.close();
+		out.close();
+	}
+
+	/**
 	 * This method creates and/or opens the BDB environment in the supplied directory. <br>
 	 * TODO: The configuration can be tuned for being more efficient / less persistent!
 	 * 

@@ -142,8 +142,8 @@ public class PCA {
 		// compute the mean of all the samples
 		for (int i = 0; i < numSamples; i++) {
 			for (int j = 0; j < sampleSize; j++) {
-				double val = A.get(i, j);
-				means.set(j, val);
+				double val = means.get(j);
+				means.set(j, val + A.get(i, j));
 			}
 		}
 		for (int j = 0; j < sampleSize; j++) {

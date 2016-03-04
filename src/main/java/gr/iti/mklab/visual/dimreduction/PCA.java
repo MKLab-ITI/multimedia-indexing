@@ -1,7 +1,5 @@
 package gr.iti.mklab.visual.dimreduction;
 
-import gr.iti.mklab.visual.utilities.Normalization;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -14,12 +12,14 @@ import org.ejml.factory.SingularValueDecomposition;
 import org.ejml.ops.CommonOps;
 import org.ejml.ops.SingularOps;
 
+import gr.iti.mklab.visual.utilities.Normalization;
+
 /**
  * <p>
  * The following class uses EJML to perform basic principle component analysis. This class is a modification
- * of the <a
- * href="https://code.google.com/p/efficient-java-matrix-library/wiki/PrincipleComponentAnalysisExample"
- * >class</a> written by Peter Abeles.
+ * of the
+ * <a href="https://code.google.com/p/efficient-java-matrix-library/wiki/PrincipleComponentAnalysisExample" >
+ * class</a> written by Peter Abeles.
  * </p>
  * <p>
  * PCA is typically derived as an eigenvalue problem. However in this implementation
@@ -136,7 +136,8 @@ public class PCA {
 		if (sampleIndex != numSamples)
 			throw new IllegalArgumentException("Not all the data has been added");
 		if (numComponents > numSamples)
-			throw new IllegalArgumentException("More data needed to compute the desired number of components");
+			throw new IllegalArgumentException(
+					"More data needed to compute the desired number of components");
 
 		means = new DenseMatrix64F(sampleSize, 1);
 		// compute the mean of all the samples
@@ -224,23 +225,23 @@ public class PCA {
 		}
 		BufferedWriter out = new BufferedWriter(new FileWriter(PCAFileName));
 		// the first line of the file contains the training sample means per component
-		for (int i = 0; i < sampleSize; i++) {
+		for (int i = 0; i < sampleSize - 1; i++) {
 			out.write(means.get(i) + " ");
 		}
-		out.write("\n");
+		out.write(means.get(sampleSize - 1) + "\n");
 
 		// the second line of the file contains the eigenvalues in descending order
-		for (int i = 0; i < numComponents; i++) {
+		for (int i = 0; i < numComponents - 1; i++) {
 			out.write(W.get(i, i) + " ");
 		}
-		out.write("\n");
+		out.write(W.get(numComponents - 1, numComponents - 1) + "\n");
 
 		// the next lines of the file contain the eigenvectors in descending eigenvalue order
 		for (int i = 0; i < numComponents; i++) {
-			for (int j = 0; j < sampleSize; j++) {
+			for (int j = 0; j < sampleSize - 1; j++) {
 				out.write(V_t.get(i, j) + " ");
 			}
-			out.write("\n");
+			out.write(V_t.get(i, sampleSize - 1) + "\n");
 		}
 		out.close();
 	}
@@ -272,7 +273,7 @@ public class PCA {
 		// parse the first line which contains the eigenvalues and initialize the diagonal eigenvalue matrix W
 		line = in.readLine();
 		if (doWhitening) {
-			String[] eigenvaluesString = line.split(" ");
+			String[] eigenvaluesString = line.trim().split(" ");
 			if (eigenvaluesString.length < numComponents) {
 				throw new Exception("Eigenvalues line is wrong!");
 			}

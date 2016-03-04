@@ -34,7 +34,7 @@ public class FolderIndexingMT {
 	 *            [4] path to the file containing the pca projection matrix (an empty String can be given if
 	 *            no projection is needed)
 	 * @param args
-	 *            [5] projection length (if projection length >= initial length, no projection will be
+	 *            [5] projection length (if projection length = initial length, no projection will be
 	 *            performed)
 	 * @param args
 	 *            [6] images will be scaled at this maximum number of pixels before vectorization

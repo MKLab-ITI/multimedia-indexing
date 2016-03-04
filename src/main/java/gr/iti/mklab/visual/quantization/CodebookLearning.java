@@ -51,8 +51,8 @@ public class CodebookLearning {
 		boolean kMeansPlusPlus = Boolean.parseBoolean(args[6]);
 
 		Instances data;
+		System.out.println("--Loading descriptors--");
 		if (filepath.endsWith(".arff")) { // loading instances from arff file
-			System.out.println("--Loading descriptors--");
 			BufferedReader reader = new BufferedReader(new FileReader(filepath));
 			// Using the Instances class of WEKA to read the dataset
 			data = new Instances(reader);
@@ -84,8 +84,7 @@ public class CodebookLearning {
 		}
 
 		String outFilename = filepath + "_codebook-" + data.numAttributes() + "A-" + numClusters + "C-"
-				+ maxIterations + "I-" + seed + "S" + "_" + normalization + System.currentTimeMillis()
-				+ ".csv";
+				+ maxIterations + "I-" + seed + "S" + "_" + normalization + ".csv";
 		AbstractQuantizerLearning.learnAndWriteQuantizer(outFilename, data, numClusters, maxIterations, seed,
 				numSlots, kMeansPlusPlus);
 	}
